@@ -1,0 +1,18 @@
+@import '@fontsource/atkinson-hyperlegible';
+@import '@fontsource/jetbrains-mono';
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+body {
+	height: 100svh;
+	display: grid;
+	place-items: center;
+	margin: 0;
+	background: #1b1e2b;
+	color: #e4f0fb;
+	margin: 0;
+}
