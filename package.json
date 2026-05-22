@@ -1,6 +1,24 @@
 {
 	"name": "@sveltecraft/sandbox",
 	"version": "0.0.1",
+	"description": "Interactive Svelte code sandbox",
+	"license": "MIT",
+	"author": "Sveltecraft",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/matiadev/svelte-sandbox.git"
+	},
+	"bugs": {
+		"url": "https://github.com/matiadev/svelte-sandbox/issues"
+	},
+	"keywords": [
+		"svelte",
+		"sandbox",
+		"codemirror",
+		"playground",
+		"code-editor",
+		"live-preview"
+	],
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run prepack",
@@ -53,9 +71,6 @@
 		"typescript-eslint": "^8.58.1",
 		"vite": "^8.0.7"
 	},
-	"keywords": [
-		"svelte"
-	],
 	"dependencies": {
 		"@codemirror/lang-css": "^6.3.1",
 		"@codemirror/lang-html": "^6.4.11",
