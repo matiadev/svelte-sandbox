@@ -27,6 +27,7 @@ An interactive HTML/CSS/JS sandbox with editable source panels and live preview:
 				display: grid;
 				place-content: center;
 			}
+			
 			button {
 				padding: 1rem 2rem;
 				font-size: 1.25rem;
@@ -35,7 +36,9 @@ An interactive HTML/CSS/JS sandbox with editable source panels and live preview:
 		`,
 		script: `
 			import confetti from 'canvas-confetti';
+			
 			let count = 0;
+
 			document.querySelector('button').addEventListener('click', (e) => {
 				count++;
 				e.target.textContent = \`Clicks: \${count}\`;
@@ -65,16 +68,13 @@ A multi-file Svelte playground with dynamic file tabs and live preview:
 ```svelte
 <script lang="ts">
 	import { SvelteSandbox } from '@sveltecraft/sandbox';
-	import { files } from './examples/svelte.js';
+	import { files } from '$lib/examples';
 </script>
 
 <SvelteSandbox width={800} height={400} {files} />
 ```
 
-Define your examples in a plain `.ts` file:
-
 ```ts
-// examples/svelte.ts
 export const files = {
 	'App.svelte': `
 		<script>
@@ -85,6 +85,15 @@ export const files = {
 		<Button onclick={() => count++}>
 			Clicks: {count}
 		</Button>
+
+		<style>
+			:global {
+				body {
+					display: grid;
+					place-content: center;
+				}
+			}
+		</style>
 	`,
 	'Button.svelte': `
 		<script>
