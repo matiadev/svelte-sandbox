@@ -1,32 +1,21 @@
 <script lang="ts">
-	import Sandbox from '$lib/Sandbox.svelte';
+	import { WebSandbox, SvelteSandbox } from '$lib/index.js';
+	import { webCode, svelteFiles } from './examples/index.js';
 </script>
 
-<Sandbox
-	width={800}
-	height={400}
-	code={{
-		html: `<button>Click</button>`,
-		css: `
-			body {
-				display: grid;
-				place-content: center;
-			}
+<div class="page">
+	<header>
+		<h1>@sveltecraft/sandbox</h1>
+		<p>Interactive code sandbox components for Svelte 5</p>
+	</header>
 
-			button {
-				padding: 1rem 2rem;
-				cursor: pointer;
-			}
-		`,
-		script: `
-			import confetti from 'canvas-confetti';
+	<section>
+		<h2>Web Sandbox</h2>
+		<WebSandbox height={400} code={webCode} />
+	</section>
 
-			document
-				.querySelector('button')
-				.addEventListener('click', () => {
-					console.log('🎉');
-					confetti();
-				});
-		`
-	}}
-/>
+	<section>
+		<h2>Svelte Sandbox</h2>
+		<SvelteSandbox height={400} files={svelteFiles} />
+	</section>
+</div>
