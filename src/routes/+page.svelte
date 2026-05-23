@@ -6,7 +6,7 @@
 	width={800}
 	height={400}
 	code={{
-		html: '<button>Click</button>',
+		html: `<button>Click</button>`,
 		css: `
 			body {
 				display: grid;

@@ -5,7 +5,7 @@ A live code sandbox component for Svelte 5 — edit HTML, CSS, and JavaScript in
 ## Installation
 
 ```sh
-pnpm add @sveltecraft/sandbox
+npm i @sveltecraft/sandbox
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @sveltecraft/sandbox
 	width={800}
 	height={400}
 	code={{
-		html: '<button>Click me</button>',
+		html: `<button>Click</button>`,
 		css: `
 			body {
 				display: grid;
