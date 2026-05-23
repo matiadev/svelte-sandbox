@@ -24,16 +24,25 @@
 		let view: { destroy: () => void } | undefined;
 
 		(async () => {
-			const { history, defaultKeymap, historyKeymap } = await import('@codemirror/commands');
-			const { keymap, EditorView, lineNumbers, highlightSpecialChars, drawSelection } =
-				await import('@codemirror/view');
-			const { EditorState } = await import('@codemirror/state');
-			const { HighlightStyle, syntaxHighlighting, defaultHighlightStyle } =
-				await import('@codemirror/language');
-			const { tags } = await import('@lezer/highlight');
-			const { html } = await import('@codemirror/lang-html');
-			const { css } = await import('@codemirror/lang-css');
-			const { javascript } = await import('@codemirror/lang-javascript');
+			const [
+				{ history, defaultKeymap, historyKeymap },
+				{ keymap, EditorView, lineNumbers, highlightSpecialChars, drawSelection },
+				{ EditorState },
+				{ HighlightStyle, syntaxHighlighting, defaultHighlightStyle },
+				{ tags },
+				{ html },
+				{ css },
+				{ javascript }
+			] = await Promise.all([
+				import('@codemirror/commands'),
+				import('@codemirror/view'),
+				import('@codemirror/state'),
+				import('@codemirror/language'),
+				import('@lezer/highlight'),
+				import('@codemirror/lang-html'),
+				import('@codemirror/lang-css'),
+				import('@codemirror/lang-javascript')
+			]);
 
 			const lang = language === 'css' ? css() : language === 'javascript' ? javascript() : html();
 
