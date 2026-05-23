@@ -197,6 +197,11 @@
 		container-type: inline-size;
 	}
 
+	.sandbox,
+	.sandbox > * {
+		box-sizing: border-box;
+	}
+
 	.sandbox {
 		--bg: #1b1e27;
 		--border: #29303d;
