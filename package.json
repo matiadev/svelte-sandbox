@@ -2,8 +2,8 @@
 	"name": "@sveltecraft/sandbox",
 	"version": "0.0.1",
 	"description": "Interactive Svelte code sandbox",
-	"license": "MIT",
 	"author": "Sveltecraft",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/matiadev/svelte-sandbox.git"
@@ -53,6 +53,8 @@
 	"devDependencies": {
 		"@eslint/compat": "^2.0.4",
 		"@eslint/js": "^10.0.1",
+		"@fontsource/atkinson-hyperlegible": "^5.2.8",
+		"@fontsource/jetbrains-mono": "^5.2.8",
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/kit": "^2.57.0",
 		"@sveltejs/package": "^2.5.7",
@@ -72,15 +74,13 @@
 		"vite": "^8.0.7"
 	},
 	"dependencies": {
+		"@codemirror/basic-setup": "^6.0.0",
 		"@codemirror/lang-css": "^6.3.1",
 		"@codemirror/lang-html": "^6.4.11",
 		"@codemirror/lang-javascript": "^6.2.5",
 		"@codemirror/language": "^6.12.3",
 		"@codemirror/state": "^6.6.0",
 		"@codemirror/view": "^6.43.0",
-		"@fontsource/atkinson-hyperlegible": "^5.2.8",
-		"@fontsource/jetbrains-mono": "^5.2.8",
-		"@lezer/highlight": "^1.2.3",
-		"codemirror": "^6.0.2"
+		"@lezer/highlight": "^1.2.3"
 	}
 }
