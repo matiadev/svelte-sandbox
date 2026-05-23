@@ -1,6 +1,6 @@
 # @sveltecraft/sandbox
 
-A live code sandbox component for Svelte 5 — edit HTML, CSS, and JavaScript in a CodeMirror 6 editor with a live preview rendered in a sandboxed iframe. Bare imports are auto-resolved via [esm.sh](https://esm.sh).
+Live code sandbox components for Svelte 5 with live preview in a sandboxed iframe and auto-resolved bare imports via [esm.sh](https://esm.sh).
 
 ## Installation
 
@@ -8,44 +8,45 @@ A live code sandbox component for Svelte 5 — edit HTML, CSS, and JavaScript in
 npm i @sveltecraft/sandbox
 ```
 
-## Usage
+## WebSandbox
+
+An interactive HTML/CSS/JS sandbox with editable source panels and live preview:
 
 ```svelte
 <script lang="ts">
-	import Sandbox from '@sveltecraft/sandbox';
+	import { WebSandbox } from '@sveltecraft/sandbox';
 </script>
 
-<Sandbox
+<WebSandbox
 	width={800}
 	height={400}
 	code={{
-		html: `<button>Click</button>`,
+		html: '<button>Clicks: 0</button>',
 		css: `
 			body {
 				display: grid;
 				place-content: center;
 			}
-
 			button {
 				padding: 1rem 2rem;
+				font-size: 1.25rem;
 				cursor: pointer;
 			}
 		`,
 		script: `
 			import confetti from 'canvas-confetti';
-	
-			document
-				.querySelector('button')
-				.addEventListener('click', () => {
-					console.log('🎉');
-					confetti();
-				});
+			let count = 0;
+			document.querySelector('button').addEventListener('click', (e) => {
+				count++;
+				e.target.textContent = \`Clicks: \${count}\`;
+				confetti();
+			});
 		`
 	}}
 />
 ```
 
-## Props
+### Props
 
 | Prop          | Type                       | Default  | Description                             |
 | ------------- | -------------------------- | -------- | --------------------------------------- |
@@ -56,6 +57,81 @@ npm i @sveltecraft/sandbox
 | `editorTheme` | `EditorTheme`              | —        | Editor syntax highlighting colors       |
 | `previewOnly` | `boolean`                  | `false`  | Hide the editor, show only the preview  |
 | `classes`     | `string`                   | `''`     | Additional CSS classes on the container |
+
+## SvelteSandbox
+
+A multi-file Svelte playground with dynamic file tabs and live preview:
+
+```svelte
+<script lang="ts">
+	import { SvelteSandbox } from '@sveltecraft/sandbox';
+	import { files } from './examples/svelte.js';
+</script>
+
+<SvelteSandbox width={800} height={400} {files} />
+```
+
+Define your examples in a plain `.ts` file:
+
+```ts
+// examples/svelte.ts
+export const files = {
+	'App.svelte': `
+		<script>
+			import Button from './Button.svelte';
+			let count = $state(0);
+		</script>
+
+		<Button onclick={() => count++}>
+			Clicks: {count}
+		</Button>
+	`,
+	'Button.svelte': `
+		<script>
+			let { children, onclick } = $props();
+		</script>
+
+		<button {onclick}>
+			{@render children?.()}
+		</button>
+
+		<style>
+			button {
+				padding: 1rem 2rem;
+				font-size: 1.25rem;
+				cursor: pointer;
+			}
+		</style>
+	`
+};
+```
+
+> **Note:** Inline template literals with `</script>` or `</style>` won't work directly in a `.svelte` file because the parser closes the tag early. Define your files in a `.ts` file and import them, or use string concatenation (`</scr` + `ipt>`).
+
+### Props
+
+| Prop          | Type                     | Default        | Description                             |
+| ------------- | ------------------------ | -------------- | --------------------------------------- |
+| `files`       | `Record<string, string>` | —              | Map of filename → source code           |
+| `entry`       | `string`                 | `'App.svelte'` | Entry file to mount                     |
+| `width`       | `string` or `number`     | `'100%'`       | Sandbox width (number = px)             |
+| `height`      | `string` or `number`     | `'100%'`       | Sandbox height (number = px)            |
+| `theme`       | `Theme`                  | —              | Container colors and fonts              |
+| `editorTheme` | `EditorTheme`            | —              | Editor syntax highlighting colors       |
+| `previewOnly` | `boolean`                | `false`        | Hide the editor, show only the preview  |
+| `classes`     | `string`                 | `''`           | Additional CSS classes on the container |
+
+## CodeEditor
+
+The underlying CodeMirror 6 editor is also exported if you want to use it standalone:
+
+```svelte
+<script lang="ts">
+	import { CodeEditor } from '@sveltecraft/sandbox';
+</script>
+
+<CodeEditor bind:value={myCode} language="javascript" theme={editorTheme} />
+```
 
 ## Theming
 
@@ -89,10 +165,10 @@ npm i @sveltecraft/sandbox
 | `fontSize`   | `14px`             | Editor font size                               |
 | `fontFamily` | `'JetBrains Mono'` | Editor font family                             |
 
-Example with a custom theme:
+### Example
 
 ```svelte
-<Sandbox
+<WebSandbox
 	code={{ html: '<h1>Hello</h1>' }}
 	theme={{
 		bg: '#0f172a',
@@ -110,7 +186,8 @@ Example with a custom theme:
 ## How it works
 
 - **Live preview** — Code is rendered inside a sandboxed iframe via the `srcdoc` attribute with only `allow-scripts`.
-- **Import resolution** — Bare specifiers in the script panel (e.g. `canvas-confetti`) are automatically detected and mapped to [esm.sh](https://esm.sh) via a `<script type="importmap">` injected into the iframe.
+- **Import resolution** — Bare specifiers (e.g. `canvas-confetti`) are automatically detected and mapped to [esm.sh](https://esm.sh) via a `<script type="importmap">` injected into the iframe.
+- **Svelte compilation** — When using `SvelteSandbox`, components are compiled client-side inside the iframe with support for multi-file imports.
 - **Dedent** — Template literals preserve their leading whitespace. The built-in `dedent` utility strips it so you can write clean, indented code blocks without affecting the output.
 - **Reactive** — Edits in any panel update the preview in real time. A reload button forces a fresh iframe render when needed.
 - **CodeMirror 6** — The editor uses CodeMirror 6 with a Poimandres-inspired dark theme, lazy-loaded to keep initial bundle size small.
