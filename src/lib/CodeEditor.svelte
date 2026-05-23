@@ -24,16 +24,26 @@
 		let view: { destroy: () => void } | undefined;
 
 		(async () => {
-			const { EditorView, minimalSetup } = await import('codemirror');
-			const { lineNumbers } = await import('@codemirror/view');
+			const { history, defaultKeymap, historyKeymap } = await import('@codemirror/commands');
+			const { keymap, EditorView, lineNumbers, highlightSpecialChars, drawSelection } =
+				await import('@codemirror/view');
 			const { EditorState } = await import('@codemirror/state');
-			const { HighlightStyle, syntaxHighlighting } = await import('@codemirror/language');
+			const { HighlightStyle, syntaxHighlighting, defaultHighlightStyle } =
+				await import('@codemirror/language');
 			const { tags } = await import('@lezer/highlight');
 			const { html } = await import('@codemirror/lang-html');
 			const { css } = await import('@codemirror/lang-css');
 			const { javascript } = await import('@codemirror/lang-javascript');
 
 			const lang = language === 'css' ? css() : language === 'javascript' ? javascript() : html();
+
+			const minimalSetup = [
+				highlightSpecialChars(),
+				history(),
+				drawSelection(),
+				syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+				keymap.of([...defaultKeymap, ...historyKeymap])
+			];
 
 			const poimandresHighlight = HighlightStyle.define([
 				{ tag: tags.keyword, color: theme?.accent ?? '#5de4c7' },
