@@ -85,10 +85,7 @@
 	const importmap = $derived.by(() => {
 		if (bareImports.length === 0) return '';
 		const imports = Object.fromEntries(
-			bareImports.map((spec) => {
-				const pkg = spec.includes('/') ? spec.slice(0, spec.indexOf('/')) : spec;
-				return [spec, `https://esm.sh/${pkg}`];
-			})
+			bareImports.map((spec) => [spec, `https://esm.sh/${spec}`])
 		);
 		return JSON.stringify({ imports }, null, 2);
 	});
