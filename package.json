@@ -1,6 +1,6 @@
 {
 	"name": "@sveltecraft/sandbox",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Interactive Svelte code sandbox",
 	"author": "Sveltecraft",
 	"license": "MIT",
