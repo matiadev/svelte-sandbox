@@ -21,7 +21,7 @@ An interactive HTML/CSS/JS sandbox with editable source panels and live preview:
 	width={800}
 	height={400}
 	code={{
-		html: '<button>Clicks: 0</button>',
+		html: `<button>Clicks: 0</button>`,
 		css: `
 			body {
 				display: grid;
@@ -39,11 +39,13 @@ An interactive HTML/CSS/JS sandbox with editable source panels and live preview:
 			
 			let count = 0;
 
-			document.querySelector('button').addEventListener('click', (e) => {
-				count++;
-				e.target.textContent = \`Clicks: \${count}\`;
-				confetti();
-			});
+			document
+				.querySelector('button')
+				.addEventListener('click', (e) => {
+					count++;
+					e.target.textContent = \`Clicks: \${count}\`;
+					confetti();
+				});
 		`
 	}}
 />
@@ -78,11 +80,18 @@ A multi-file Svelte playground with dynamic file tabs and live preview:
 export const files = {
 	'App.svelte': `
 		<script>
+			import confetti from 'canvas-confetti';
 			import Button from './Button.svelte';
+	
 			let count = $state(0);
+	
+			function onclick() {
+				confetti();
+				count++;
+			}
 		</script>
 
-		<Button onclick={() => count++}>
+		<Button {onclick}>
 			Clicks: {count}
 		</Button>
 
@@ -115,7 +124,7 @@ export const files = {
 };
 ```
 
-> **Note:** Inline template literals with `</script>` or `</style>` won't work directly in a `.svelte` file because the parser closes the tag early. Define your files in a `.ts` file and import them, or use string concatenation (`</scr` + `ipt>`).
+> ⚠️ **Note:** Inline template literals with `</script>` or `</style>` won't work directly in a `.svelte` file because the parser closes the tag early. Define your files in a `.ts` file and import them, or use string concatenation (`</scr` + `ipt>`).
 
 ### Props
 
