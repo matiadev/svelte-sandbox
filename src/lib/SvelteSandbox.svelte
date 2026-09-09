@@ -72,10 +72,6 @@
 
 	const compiled = $derived(compileFiles(code));
 
-	const compileErrors = $derived(
-		Object.entries(compiled.errors).map(([file, message]) => `${file}: ${message}`)
-	);
-
 	function buildSrcdoc(lexerReady: boolean) {
 		const bareImports = lexerReady ? collectBareImports(code) : [];
 		const importMap = {
@@ -143,6 +139,9 @@
 			{/key}
 		{/await}
 
+		{const compileErrors = $derived(
+			Object.entries(compiled.errors).map(([file, message]) => `${file}: ${message}`)
+		)}
 		{#if compileErrors.length > 0}
 			<div class="compile-errors" role="alert">
 				{#each compileErrors as error (error)}
