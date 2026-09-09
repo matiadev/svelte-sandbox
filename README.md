@@ -1,3 +1,5 @@
+![@sveltecraft/sandbox](static/banner.png)
+
 # @sveltecraft/sandbox
 
 Live code sandbox components for Svelte 5 with live preview in a sandboxed iframe and auto-resolved bare imports via [esm.sh](https://esm.sh).
