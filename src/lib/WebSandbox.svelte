@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import CodeEditor from './CodeEditor.svelte';
 	import { dedentCode } from './dedent.js';
+	import { collectScriptImports, ensureLexerReady, isLexerReady } from './imports.js';
 
 	interface Code {
 		html?: string;
@@ -74,19 +75,25 @@
 		{ id: 'script', label: 'JS', language: 'javascript' }
 	] as const;
 
-	const bareImports = $derived.by(() => {
-		const matches = (code.script ?? '').matchAll(/(?:from|import)\s*['"](\S+?)['"]/g);
-		const specs = [...matches].map((m) => m[1]);
-		return [...new Set(specs)].filter(
-			(s) => !s.startsWith('.') && !s.startsWith('/') && !s.startsWith('http')
-		);
+	let lexerReady = $state(isLexerReady());
+
+	$effect(() => {
+		ensureLexerReady().then((ok) => {
+			lexerReady = ok;
+		});
 	});
 
-	const importmap = $derived.by(() => {
-		if (bareImports.length === 0) return '';
-		const imports = Object.fromEntries(bareImports.map((spec) => [spec, `https://esm.sh/${spec}`]));
-		return JSON.stringify({ imports }, null, 2);
-	});
+	const bareImports = $derived(lexerReady ? collectScriptImports(code.script ?? '') : []);
+
+	const importmap = $derived(
+		bareImports.length === 0
+			? ''
+			: JSON.stringify(
+					{ imports: Object.fromEntries(bareImports.map((spec) => [spec, `https://esm.sh/${spec}`])) },
+					null,
+					2
+				)
+	);
 
 	const srcdoc = $derived(`
 		<!doctype html>

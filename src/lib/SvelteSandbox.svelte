@@ -4,6 +4,7 @@
 	import CodeEditor from './CodeEditor.svelte';
 	import { compileFiles } from './compile.js';
 	import { dedent } from './dedent.js';
+	import { collectBareImports, ensureLexerReady, isLexerReady } from './imports.js';
 
 	interface Theme {
 		bg?: string;
@@ -69,15 +70,15 @@
 		reloadKey++;
 	}
 
-	const bareImports = $derived.by(() => {
-		const allCode = Object.values(code).join('\n');
-		const matches = allCode.matchAll(/(?:from|import)\s*['"](\S+?)['"]/g);
-		const specs = [...matches].map((m) => m[1]);
-		return [...new Set(specs)].filter(
-			(s) =>
-				!s.startsWith('.') && !s.startsWith('/') && !s.startsWith('http') && !s.startsWith('svelte')
-		);
+	let lexerReady = $state(isLexerReady());
+
+	$effect(() => {
+		ensureLexerReady().then((ok) => {
+			lexerReady = ok;
+		});
 	});
+
+	const bareImports = $derived(lexerReady ? collectBareImports(code) : []);
 
 	const compiled = $derived(compileFiles(code));
 
