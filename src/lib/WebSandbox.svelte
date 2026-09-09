@@ -4,8 +4,10 @@
 	import { dedentCode } from './dedent.js';
 	import { collectScriptImports, ensureLexerReady } from './imports.js';
 	import Sandbox from './Sandbox.svelte';
+	import Tabs from './Tabs.svelte';
 	import { renderDoc } from './preview-doc.js';
 	import previewHtml from './preview.html?raw';
+	import { language } from './languageMapper.ts';
 
 	interface Code {
 		html?: string;
@@ -102,27 +104,16 @@
 	max={maxSplit}
 >
 	{#snippet editor()}
-		{let activeTab: 'html' | 'css' | 'script' = $state('html')}
 		{const tabs = (
 			[
-				{ id: 'html', label: 'HTML', language: 'html' },
-				{ id: 'css', label: 'CSS', language: 'css' },
-				{ id: 'script', label: 'JS', language: 'javascript' }
+				{ id: 'html', label: 'HTML' },
+				{ id: 'css', label: 'CSS' },
+				{ id: 'script', label: 'JS' }
 			] as const
 		).filter((t) => code[t.id] !== '')}
-		{const language = {
-			html: 'html',
-			css: 'css',
-			script: 'javascript'
-		}}
+		{let activeTab = $state(tabs[0].id)}
+		<Tabs {tabs} bind:active={activeTab} />
 
-		<div class="tabs">
-			{#each tabs as tab (tab.id)}
-				<button class:active={activeTab === tab.id} onclick={() => (activeTab = tab.id)}>
-					{tab.label}
-				</button>
-			{/each}
-		</div>
 		{#key activeTab}
 			<CodeEditor bind:value={code[activeTab]} language={language[activeTab]} theme={editorTheme} />
 		{/key}
@@ -137,44 +128,3 @@
 		{/await}
 	{/snippet}
 </Sandbox>
-
-<style>
-	.tabs {
-		border-bottom: var(--border-w) solid var(--border);
-
-		button {
-			position: relative;
-			padding: 0.6rem 1rem;
-			font-family: inherit;
-			font-size: var(--tab-font-size);
-			color: var(--text-muted);
-			background: none;
-			border: none;
-			cursor: pointer;
-			transition: color 0.1s;
-
-			&:hover {
-				color: var(--text);
-			}
-
-			&.active {
-				color: var(--text);
-			}
-
-			&::after {
-				content: '';
-				position: absolute;
-				bottom: 0;
-				left: 0;
-				width: 100%;
-				height: 2px;
-				background: var(--accent);
-				opacity: 0;
-			}
-
-			&.active::after {
-				opacity: 1;
-			}
-		}
-	}
-</style>

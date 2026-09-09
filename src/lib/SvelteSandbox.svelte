@@ -6,9 +6,11 @@
 	import { dedent } from './dedent.js';
 	import { collectBareImports, ensureLexerReady } from './imports.js';
 	import Sandbox from './Sandbox.svelte';
+	import Tabs from './Tabs.svelte';
 	import { renderDoc } from './preview-doc.js';
 	import previewHtml from './preview.html?raw';
 	import previewRuntime from './preview-runtime.js?raw';
+	import { language } from './languageMapper.ts';
 
 	interface Theme {
 		bg?: string;
@@ -107,25 +109,14 @@
 	max={maxSplit}
 >
 	{#snippet editor()}
-		{let activeTab = $state(filenames[0] ?? '')}
 		{const tabs = $derived(filenames.map((name) => ({ id: name, label: name })))}
-
-		<div class="tabs">
-			{#each tabs as tab (tab.id)}
-				<button class:active={activeTab === tab.id} onclick={() => (activeTab = tab.id)}>
-					{tab.label}
-				</button>
-			{/each}
-		</div>
+		{let activeTab = $state(filenames[0] ?? '')}
+		<Tabs {tabs} bind:active={activeTab} />
 
 		{#key activeTab}
 			<CodeEditor
 				bind:value={code[activeTab]}
-				language={activeTab.endsWith('.svelte')
-					? 'html'
-					: activeTab.endsWith('.css')
-						? 'css'
-						: 'javascript'}
+				language={language[activeTab.split('.').pop() as keyof typeof language]}
 				theme={editorTheme}
 			/>
 		{/key}
@@ -153,45 +144,6 @@
 </Sandbox>
 
 <style>
-	.tabs {
-		border-bottom: var(--border-w) solid var(--border);
-
-		button {
-			position: relative;
-			padding: 0.6rem 1rem;
-			font-family: inherit;
-			font-size: var(--tab-font-size);
-			color: var(--text-muted);
-			background: none;
-			border: none;
-			cursor: pointer;
-			transition: color 0.1s;
-
-			&:hover {
-				color: var(--text);
-			}
-
-			&.active {
-				color: var(--text);
-			}
-
-			&::after {
-				content: '';
-				position: absolute;
-				bottom: 0;
-				left: 0;
-				width: 100%;
-				height: 2px;
-				background: var(--accent);
-				opacity: 0;
-			}
-
-			&.active::after {
-				opacity: 1;
-			}
-		}
-	}
-
 	.compile-errors {
 		position: absolute;
 		right: 0.5rem;
