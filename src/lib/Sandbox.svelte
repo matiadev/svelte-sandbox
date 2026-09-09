@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { Snippet } from 'svelte';
-	import SplitDivider from './SplitDivider.svelte';
-	import { SPLIT_BREAKPOINT, clampSplit, nextSplitFromKey, splitFromDragDelta } from './split.js';
+	import SplitDivider from './SplitDivider2.svelte';
+	import { SPLIT_BREAKPOINT, clampSplit } from './split.js';
 	import type { Theme } from './types.js';
 	import type { ClassValue } from 'svelte/elements';
+	import type { Attachment } from 'svelte/attachments';
 
 	interface Props {
 		width?: string | number;
@@ -44,71 +45,7 @@
 	);
 	let stacked = $state(false);
 	let dragging = $state(false);
-	let sandboxEl: HTMLDivElement;
-	/*
-	 * Grab point recorded at drag start.
-	 * Moves apply as a delta so a click without dragging never moves the split.
-	 */
-	let dragStart: { id: number; x: number; y: number; split: number } | null = null;
-
-	function updateSplitFromDrag(clientX: number, clientY: number) {
-		if (!dragStart) return;
-		const rect = sandboxEl.getBoundingClientRect();
-		split = splitFromDragDelta(
-			dragStart.split,
-			dragStart.x,
-			dragStart.y,
-			clientX,
-			clientY,
-			rect,
-			stacked,
-			min,
-			max
-		);
-	}
-
-	function handleDividerPointerDown(event: PointerEvent) {
-		if (!resizable || previewOnly) return;
-		dragging = true;
-		dragStart = { id: event.pointerId, x: event.clientX, y: event.clientY, split };
-		try {
-			(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
-		} catch {
-			// noop for synthetic or stale pointer id
-		}
-		document.body.style.cursor = stacked ? 'row-resize' : 'col-resize';
-		document.body.style.userSelect = 'none';
-		event.preventDefault();
-	}
-
-	function handleDividerPointerMove(event: PointerEvent) {
-		if (!dragging || !dragStart || event.pointerId !== dragStart.id) return;
-		updateSplitFromDrag(event.clientX, event.clientY);
-		event.preventDefault();
-	}
-
-	function handleDividerPointerUp(event: PointerEvent) {
-		if (!dragging) return;
-		dragging = false;
-		dragStart = null;
-		document.body.style.cursor = '';
-		document.body.style.userSelect = '';
-		try {
-			(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
-		} catch {
-			// noop when capture is already released
-		}
-	}
-
-	function handleDividerKey(event: KeyboardEvent) {
-		const next = nextSplitFromKey(split, event.key, event.shiftKey, min, max);
-		if (next !== null) {
-			split = next;
-			event.preventDefault();
-		}
-	}
-
-	function observeStacked(node: HTMLDivElement) {
+	const observeStacked: Attachment<HTMLDivElement> = (node) => {
 		const update = () => {
 			stacked = node.clientWidth <= SPLIT_BREAKPOINT;
 		};
@@ -116,26 +53,17 @@
 		const observer = new ResizeObserver(update);
 		observer.observe(node);
 		return () => observer.disconnect();
-	}
-
-	function resetDragStyles() {
-		return () => {
-			document.body.style.cursor = '';
-			document.body.style.userSelect = '';
-		};
-	}
+	};
 </script>
 
 <div
 	class="sandbox-container {classes}"
 	{@attach observeStacked}
-	{@attach resetDragStyles}
 	style:width={typeof width === 'number' ? `${width}px` : width}
 	style:height={typeof height === 'number' ? `${height}px` : height}
 >
 	<div
 		class="sandbox"
-		bind:this={sandboxEl}
 		class:preview-only={previewOnly}
 		class:dragging
 		class:has-divider={resizable && !previewOnly}
@@ -156,18 +84,7 @@
 				{@render editor?.()}
 			</div>
 			{#if resizable}
-				<SplitDivider
-					{stacked}
-					{split}
-					{min}
-					{max}
-					{dragging}
-					onpointerdown={handleDividerPointerDown}
-					onpointermove={handleDividerPointerMove}
-					onpointerup={handleDividerPointerUp}
-					onpointercancel={handleDividerPointerUp}
-					onkeydown={handleDividerKey}
-				/>
+				<SplitDivider bind:split bind:dragging {stacked} {min} {max} />
 			{/if}
 		{/if}
 
