@@ -44,7 +44,6 @@
 	);
 	let stacked = $state(false);
 	let dragging = $state(false);
-	let containerEl: HTMLDivElement;
 	let sandboxEl: HTMLDivElement;
 	/*
 	 * Grab point recorded at drag start.
@@ -54,8 +53,7 @@
 
 	function updateSplitFromDrag(clientX: number, clientY: number) {
 		if (!dragStart) return;
-		const rect = (sandboxEl ?? containerEl)?.getBoundingClientRect();
-		if (!rect) return;
+		const rect = sandboxEl.getBoundingClientRect();
 		split = splitFromDragDelta(
 			dragStart.split,
 			dragStart.x,
@@ -110,29 +108,28 @@
 		}
 	}
 
-	$effect(() => {
-		const el = containerEl;
-		if (!el) return;
+	function observeStacked(node: HTMLDivElement) {
 		const update = () => {
-			stacked = el.clientWidth <= SPLIT_BREAKPOINT;
+			stacked = node.clientWidth <= SPLIT_BREAKPOINT;
 		};
 		update();
 		const observer = new ResizeObserver(update);
-		observer.observe(el);
+		observer.observe(node);
 		return () => observer.disconnect();
-	});
+	}
 
-	$effect(() => {
+	function resetDragStyles() {
 		return () => {
 			document.body.style.cursor = '';
 			document.body.style.userSelect = '';
 		};
-	});
+	}
 </script>
 
 <div
 	class="sandbox-container {classes}"
-	bind:this={containerEl}
+	{@attach observeStacked}
+	{@attach resetDragStyles}
 	style:width={typeof width === 'number' ? `${width}px` : width}
 	style:height={typeof height === 'number' ? `${height}px` : height}
 >
