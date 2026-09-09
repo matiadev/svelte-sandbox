@@ -67,32 +67,12 @@
 
 	const filenames = Object.keys(untrack(() => initial));
 
-	let code = $state(
-		Object.fromEntries(filenames.map((name) => [name, dedent(untrack(() => initial)[name])]))
-	);
-	let activeTab = $state(filenames[0] ?? '');
-	let reloadKey = $state(false);
-
-	function switchTab(id: string) {
-		activeTab = id;
-	}
-
-	function reloadPreview() {
-		reloadKey = !reloadKey;
-	}
+	let code = $state(Object.fromEntries(filenames.map((name) => [name, dedent(initial[name])])));
 
 	const compiled = $derived(compileFiles(code));
 
 	const compileErrors = $derived(
 		Object.entries(compiled.errors).map(([file, message]) => `${file}: ${message}`)
-	);
-
-	const tabs = $derived(
-		filenames.map((name) => ({
-			id: name,
-			label: name,
-			language: name.endsWith('.svelte') ? 'html' : name.endsWith('.css') ? 'css' : 'javascript'
-		}))
 	);
 
 	function buildSrcdoc(lexerReady: boolean) {
@@ -131,27 +111,40 @@
 	max={maxSplit}
 >
 	{#snippet editor()}
+		{let activeTab = $state(filenames[0] ?? '')}
+		{const tabs = $derived(filenames.map((name) => ({ id: name, label: name })))}
+
 		<div class="tabs">
 			{#each tabs as tab (tab.id)}
-				<button class:active={activeTab === tab.id} onclick={() => switchTab(tab.id)}>
+				<button class:active={activeTab === tab.id} onclick={() => (activeTab = tab.id)}>
 					{tab.label}
 				</button>
 			{/each}
 		</div>
-		{#each tabs as tab (tab.id)}
-			{#if activeTab === tab.id}
-				<CodeEditor bind:value={code[tab.id]} language={tab.language} theme={editorTheme} />
-			{/if}
-		{/each}
+
+		{#key activeTab}
+			<CodeEditor
+				bind:value={code[activeTab]}
+				language={activeTab.endsWith('.svelte')
+					? 'html'
+					: activeTab.endsWith('.css')
+						? 'css'
+						: 'javascript'}
+				theme={editorTheme}
+			/>
+		{/key}
 	{/snippet}
 
 	{#snippet preview()}
+		{let reloadKey = $state(false)}
+
 		{#await ensureLexerReady() then lexerReady}
 			{@const srcdoc = buildSrcdoc(lexerReady)}
 			{#key reloadKey}
 				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
 			{/key}
 		{/await}
+
 		{#if compileErrors.length > 0}
 			<div class="compile-errors" role="alert">
 				{#each compileErrors as error (error)}
@@ -159,7 +152,12 @@
 				{/each}
 			</div>
 		{/if}
-		<button class="reload-button" onclick={reloadPreview} aria-label="Reload preview">
+
+		<button
+			class="reload-button"
+			onclick={() => (reloadKey = !reloadKey)}
+			aria-label="Reload preview"
+		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
