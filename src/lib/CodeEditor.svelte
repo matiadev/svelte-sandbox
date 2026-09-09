@@ -80,7 +80,12 @@
 						height: '100%'
 					},
 					'& .cm-scroller': {
-						fontFamily: theme?.fontFamily ?? 'JetBrains Mono'
+						fontFamily: theme?.fontFamily ?? 'JetBrains Mono',
+						scrollbarWidth: 'thin'
+					},
+					'& .cm-scroller::-webkit-scrollbar': {
+						width: '8px',
+						height: '8px'
 					},
 					'.cm-gutters': {
 						background: 'transparent',
