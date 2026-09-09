@@ -4,7 +4,7 @@
 	import CodeEditor from './CodeEditor.svelte';
 	import { compileFiles } from './compile.js';
 	import { dedent } from './dedent.js';
-	import { collectBareImports, ensureLexerReady, isLexerReady } from './imports.js';
+	import { collectBareImports, ensureLexerReady } from './imports.js';
 	import SplitDivider from './SplitDivider.svelte';
 	import { SPLIT_BREAKPOINT, clampSplit, nextSplitFromKey, splitFromDragDelta } from './split.js';
 	import previewHtml from './preview.html?raw';
@@ -157,14 +157,6 @@
 		}
 	}
 
-	let lexerReady = $state(isLexerReady());
-
-	$effect(() => {
-		ensureLexerReady().then((ok) => {
-			lexerReady = ok;
-		});
-	});
-
 	$effect(() => {
 		const el = containerEl;
 		if (!el) return;
@@ -198,7 +190,7 @@
 		}))
 	);
 
-	function buildSrcdoc() {
+	function buildSrcdoc(lexerReady: boolean) {
 		const bareImports = lexerReady ? collectBareImports(code) : [];
 		const importMap = {
 			imports: Object.assign(
@@ -278,10 +270,12 @@
 		{/if}
 
 		<div class="preview">
-			{#key reloadKey}
-				{const srcdoc = $derived(buildSrcdoc())}
-				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
-			{/key}
+			{#await ensureLexerReady() then lexerReady}
+				{const srcdoc = $derived(buildSrcdoc(lexerReady))}
+				{#key reloadKey}
+					<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
+				{/key}
+			{/await}
 			{#if compileErrors.length > 0}
 				<div class="compile-errors" role="alert">
 					{#each compileErrors as error (error)}
