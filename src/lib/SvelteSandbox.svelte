@@ -8,7 +8,7 @@
 	import SplitDivider from './SplitDivider.svelte';
 	import { SPLIT_BREAKPOINT, clampSplit, nextSplitFromKey, splitFromDragDelta } from './split.js';
 	import previewHtml from './preview.html?raw';
-	import Asdf from './asdf.ts?raw';
+	import previewRuntime from './preview-runtime.ts?raw';
 
 	interface Theme {
 		bg?: string;
@@ -198,7 +198,7 @@
 		}))
 	);
 
-	function asdf() {
+	function buildSrcdoc() {
 		const bareImports = lexerReady ? collectBareImports(code) : [];
 		const importMap = {
 			imports: Object.assign(
@@ -218,7 +218,7 @@
 			.split('%SANDBOX_DATA%')
 			.join(sandboxDataJson)
 			.split('//%SCRIPT%')
-			.join(Asdf);
+			.join(previewRuntime);
 	}
 </script>
 
@@ -279,7 +279,7 @@
 
 		<div class="preview">
 			{#key reloadKey}
-				{const srcdoc = $derived(asdf())}
+				{const srcdoc = $derived(buildSrcdoc())}
 				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
 			{/key}
 			{#if compileErrors.length > 0}
