@@ -3,6 +3,8 @@
 	import CodeEditor from './CodeEditor.svelte';
 	import { dedentCode } from './dedent.js';
 	import { collectScriptImports, ensureLexerReady, isLexerReady } from './imports.js';
+	import SplitDivider from './SplitDivider.svelte';
+	import { SPLIT_BREAKPOINT, clampSplit, nextSplitFromKey, splitFromDragDelta } from './split.js';
 
 	interface Code {
 		html?: string;
@@ -44,6 +46,10 @@
 		editorTheme?: EditorTheme;
 		previewOnly?: boolean;
 		classes?: string;
+		resizable?: boolean;
+		initialSplit?: number;
+		minSplit?: number;
+		maxSplit?: number;
 	}
 
 	type TabId = (typeof tabs)[number]['id'];
@@ -55,11 +61,32 @@
 		theme,
 		editorTheme,
 		previewOnly = false,
-		classes = ''
+		classes = '',
+		resizable = true,
+		initialSplit = 50,
+		minSplit = 20,
+		maxSplit = 80
 	}: Props = $props();
 	let code = $state(dedentCode(untrack(() => initial)));
 	let activeTab = $state('html');
 	let reloadKey = $state(0);
+	// uncontrolled split, intentionally reads props only once
+	let split = $state(
+		clampSplit(
+			untrack(() => initialSplit),
+			untrack(() => minSplit),
+			untrack(() => maxSplit)
+		)
+	);
+	let stacked = $state(false);
+	let dragging = $state(false);
+	let containerEl: HTMLDivElement | undefined = $state();
+	let sandboxEl: HTMLDivElement | undefined = $state();
+	/*
+	 * Grab point recorded at drag start.
+	 * Moves apply as a delta so a click without dragging never moves the split.
+	 */
+	let dragStart: { id: number; x: number; y: number; split: number } | null = null;
 
 	function switchTab(id: TabId) {
 		activeTab = id;
@@ -67,6 +94,64 @@
 
 	function reloadPreview() {
 		reloadKey++;
+	}
+
+	function updateSplitFromDrag(clientX: number, clientY: number) {
+		if (!dragStart) return;
+		const rect = (sandboxEl ?? containerEl)?.getBoundingClientRect();
+		if (!rect) return;
+		split = splitFromDragDelta(
+			dragStart.split,
+			dragStart.x,
+			dragStart.y,
+			clientX,
+			clientY,
+			rect,
+			stacked,
+			minSplit,
+			maxSplit
+		);
+	}
+
+	function handleDividerPointerDown(event: PointerEvent) {
+		if (!resizable || previewOnly) return;
+		dragging = true;
+		dragStart = { id: event.pointerId, x: event.clientX, y: event.clientY, split };
+		try {
+			(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+		} catch {
+			// noop for synthetic or stale pointer id
+		}
+		document.body.style.cursor = stacked ? 'row-resize' : 'col-resize';
+		document.body.style.userSelect = 'none';
+		event.preventDefault();
+	}
+
+	function handleDividerPointerMove(event: PointerEvent) {
+		if (!dragging || !dragStart || event.pointerId !== dragStart.id) return;
+		updateSplitFromDrag(event.clientX, event.clientY);
+		event.preventDefault();
+	}
+
+	function handleDividerPointerUp(event: PointerEvent) {
+		if (!dragging) return;
+		dragging = false;
+		dragStart = null;
+		document.body.style.cursor = '';
+		document.body.style.userSelect = '';
+		try {
+			(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
+		} catch {
+			// noop when capture is already released
+		}
+	}
+
+	function handleDividerKey(event: KeyboardEvent) {
+		const next = nextSplitFromKey(split, event.key, event.shiftKey, minSplit, maxSplit);
+		if (next !== null) {
+			split = next;
+			event.preventDefault();
+		}
 	}
 
 	const tabs = [
@@ -83,13 +168,34 @@
 		});
 	});
 
+	$effect(() => {
+		const el = containerEl;
+		if (!el) return;
+		const update = () => {
+			stacked = el.clientWidth <= SPLIT_BREAKPOINT;
+		};
+		update();
+		const observer = new ResizeObserver(update);
+		observer.observe(el);
+		return () => observer.disconnect();
+	});
+
+	$effect(() => {
+		return () => {
+			document.body.style.cursor = '';
+			document.body.style.userSelect = '';
+		};
+	});
+
 	const bareImports = $derived(lexerReady ? collectScriptImports(code.script ?? '') : []);
 
 	const importmap = $derived(
 		bareImports.length === 0
 			? ''
 			: JSON.stringify(
-					{ imports: Object.fromEntries(bareImports.map((spec) => [spec, `https://esm.sh/${spec}`])) },
+					{
+						imports: Object.fromEntries(bareImports.map((spec) => [spec, `https://esm.sh/${spec}`]))
+					},
 					null,
 					2
 				)
@@ -141,12 +247,16 @@
 
 <div
 	class="sandbox-container {classes}"
+	bind:this={containerEl}
 	style:width={typeof width === 'number' ? `${width}px` : width}
 	style:height={typeof height === 'number' ? `${height}px` : height}
 >
 	<div
 		class="sandbox"
+		bind:this={sandboxEl}
 		class:preview-only={previewOnly}
+		class:dragging
+		class:has-divider={resizable && !previewOnly}
 		style:--bg={theme?.bg}
 		style:--border={theme?.border}
 		style:--accent={theme?.accent}
@@ -157,6 +267,7 @@
 		style:--border-w={theme?.borderW}
 		style:--font-family={theme?.fontFamily}
 		style:--font-size={theme?.fontSize}
+		style:--split="{split}%"
 	>
 		{#if !previewOnly}
 			<div class="sidebar">
@@ -173,6 +284,20 @@
 					{/if}
 				{/each}
 			</div>
+			{#if resizable}
+				<SplitDivider
+					{stacked}
+					{split}
+					min={minSplit}
+					max={maxSplit}
+					{dragging}
+					onpointerdown={handleDividerPointerDown}
+					onpointermove={handleDividerPointerMove}
+					onpointerup={handleDividerPointerUp}
+					onpointercancel={handleDividerPointerUp}
+					onkeydown={handleDividerKey}
+				/>
+			{/if}
 		{/if}
 
 		<div class="preview">
@@ -217,7 +342,7 @@
 		--text: #e4f0fb;
 		--tab-font-size: 1rem;
 		--radius: 0.5rem;
-		--panel-ratio: 50%;
+		--split: 50%;
 		--border-w: 1px;
 		--font-family: 'Atkinson Hyperlegible', sans-serif;
 		--font-size: 1rem;
@@ -225,7 +350,7 @@
 		width: 100%;
 		height: 100%;
 		display: flex;
-		flex-wrap: wrap;
+		flex-direction: column;
 		font-family: var(--font-family);
 		font-size: var(--font-size);
 		background: var(--bg);
@@ -233,22 +358,43 @@
 		border-radius: var(--radius);
 		overflow: hidden;
 
+		@container (width > 700px) {
+			flex-direction: row;
+		}
+
+		&.dragging {
+			user-select: none;
+			-webkit-user-select: none;
+		}
+
+		&.dragging .preview :global(iframe) {
+			pointer-events: none;
+		}
+
 		.sidebar {
 			width: 100%;
+			height: var(--split);
+			flex: 0 0 auto;
 			display: flex;
 			flex-direction: column;
 			background: var(--bg);
 			border-bottom: var(--border-w) solid var(--border);
-			min-height: 50%;
-			max-height: 50%;
 			overflow: hidden;
+			min-height: 0;
 
 			@container (width > 700px) {
-				width: var(--panel-ratio);
+				width: var(--split);
+				height: 100%;
 				border-right: var(--border-w) solid var(--border);
 				border-bottom: none;
-				min-height: auto;
-				max-height: 100%;
+			}
+		}
+
+		&.has-divider .sidebar {
+			border-bottom: none;
+
+			@container (width > 700px) {
+				border-right: none;
 			}
 		}
 
@@ -294,14 +440,16 @@
 		.preview {
 			position: relative;
 			width: 100%;
-			min-height: 50%;
-			max-height: 50%;
+			flex: 1 1 0;
+			min-height: 0;
 			overflow: hidden;
 
 			@container (width > 700px) {
-				width: var(--panel-ratio);
+				width: auto;
+				height: 100%;
+				flex: 1 1 0;
+				min-width: 0;
 				min-height: auto;
-				max-height: 100%;
 			}
 
 			:global(iframe) {
@@ -314,6 +462,7 @@
 			.preview-only & {
 				width: 100%;
 				height: 100%;
+				flex: 1 1 auto;
 			}
 		}
 
