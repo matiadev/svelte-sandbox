@@ -33,8 +33,7 @@ function specsFromJs(source: string): string[] {
 			if (imp.type === 'dynamic') {
 				if (imp.probablyTypeOnly) continue;
 				const spec = imp.specifier;
-				if (typeof spec === 'string' && spec !== '' && !spec.includes('*'))
-					out.push(spec);
+				if (typeof spec === 'string' && spec !== '' && !spec.includes('*')) out.push(spec);
 			} else {
 				if (imp.typeOnly) continue;
 				if (imp.specifier !== '' && !imp.specifier.includes('*')) out.push(imp.specifier);
