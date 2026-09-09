@@ -18,11 +18,11 @@ body {
 	place-items: center;
 	margin: 0;
 	font-family: 'Atkinson Hyperlegible', sans-serif;
+	color: #fff;
 	background: #1b1e2b;
 	background-image: radial-gradient(ellipse at 50% 0%, oklch(0.8 0.4 180 / 4%), transparent 60%);
 	background-attachment: fixed;
 	background-repeat: no-repeat;
-	color: #e4f0fb;
 }
 
 .page {
@@ -38,13 +38,11 @@ body {
 		h1 {
 			margin: 0;
 			font-size: 2.5rem;
-			color: #e4f0fb;
 		}
 
 		p {
 			margin: 0.5rem 0;
 			font-size: 1.25rem;
-			color: #c2c7d6;
 		}
 	}
 
