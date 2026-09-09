@@ -41,9 +41,19 @@
 
 		<div class="sandbox-wrap">
 			{#if showSvelte}
-				<SvelteSandbox height={clean ? 420 : 380} files={svelteFiles} />
+				<SvelteSandbox
+					height={clean ? 420 : 380}
+					files={svelteFiles}
+					theme={{ tabFontSize: '1.1rem' }}
+					editorTheme={{ fontSize: '17px' }}
+				/>
 			{:else}
-				<WebSandbox height={clean ? 420 : 380} code={webCode} />
+				<WebSandbox
+					height={clean ? 420 : 380}
+					code={webCode}
+					theme={{ tabFontSize: '1.1rem' }}
+					editorTheme={{ fontSize: '17px' }}
+				/>
 			{/if}
 
 			{#if withConfetti}
@@ -92,7 +102,7 @@
 		height: 640px;
 		display: flex;
 		flex-direction: column;
-		gap: 2rem;
+		gap: 1.5rem;
 		padding: 3.5rem 4rem 2rem;
 		background: #1b1e27;
 		background-image: radial-gradient(ellipse at 50% 0%, oklch(0.8 0.4 180 / 4%), transparent 60%);
@@ -104,13 +114,13 @@
 
 		h1 {
 			margin: 0;
-			font-size: 3.25rem;
+			font-size: 4.25rem;
 			line-height: 1;
 		}
 
 		p {
 			margin: 1rem 0 0;
-			font-size: 1.35rem;
+			font-size: 1.6rem;
 		}
 	}
 
