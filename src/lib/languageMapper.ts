@@ -5,3 +5,5 @@ export const language = {
 	script: 'javascript',
 	js: 'javascript'
 } as const;
+
+export type Language = (typeof language)[keyof typeof language];

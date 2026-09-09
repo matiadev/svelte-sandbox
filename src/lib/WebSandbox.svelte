@@ -8,51 +8,10 @@
 	import { renderDoc } from './preview-doc.js';
 	import previewHtml from './preview.html?raw';
 	import { language } from './languageMapper.ts';
+	import type { Code, SharedProps } from './types.js';
 
-	interface Code {
-		html?: string;
-		css?: string;
-		script?: string;
-	}
-
-	interface Theme {
-		bg?: string;
-		border?: string;
-		accent?: string;
-		text?: string;
-		textMuted?: string;
-		tabFontSize?: string;
-		radius?: string;
-		borderW?: string;
-		fontFamily?: string;
-		fontSize?: string;
-	}
-
-	interface EditorTheme {
-		accent?: string;
-		function?: string;
-		variable?: string;
-		muted?: string;
-		comment?: string;
-		special?: string;
-		text?: string;
-		gutter?: string;
-		fontSize?: string;
-		fontFamily?: string;
-	}
-
-	interface Props {
+	interface Props extends SharedProps {
 		code?: Code;
-		width?: string | number;
-		height?: string | number;
-		theme?: Theme;
-		editorTheme?: EditorTheme;
-		previewOnly?: boolean;
-		classes?: string;
-		resizable?: boolean;
-		initialSplit?: number;
-		minSplit?: number;
-		maxSplit?: number;
 	}
 
 	const {

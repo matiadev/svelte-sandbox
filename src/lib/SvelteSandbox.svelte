@@ -11,46 +11,11 @@
 	import previewHtml from './preview.html?raw';
 	import previewRuntime from './preview-runtime.js?raw';
 	import { language } from './languageMapper.ts';
+	import type { SharedProps } from './types.js';
 
-	interface Theme {
-		bg?: string;
-		border?: string;
-		accent?: string;
-		text?: string;
-		textMuted?: string;
-		tabFontSize?: string;
-		radius?: string;
-		borderW?: string;
-		fontFamily?: string;
-		fontSize?: string;
-	}
-
-	interface EditorTheme {
-		accent?: string;
-		function?: string;
-		variable?: string;
-		muted?: string;
-		comment?: string;
-		special?: string;
-		text?: string;
-		gutter?: string;
-		fontSize?: string;
-		fontFamily?: string;
-	}
-
-	interface Props {
+	interface Props extends SharedProps {
 		entry?: string;
 		files: Record<string, string>;
-		width?: string | number;
-		height?: string | number;
-		theme?: Theme;
-		editorTheme?: EditorTheme;
-		previewOnly?: boolean;
-		classes?: string;
-		resizable?: boolean;
-		initialSplit?: number;
-		minSplit?: number;
-		maxSplit?: number;
 	}
 
 	const {

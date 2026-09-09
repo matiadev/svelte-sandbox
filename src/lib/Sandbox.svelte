@@ -3,19 +3,7 @@
 	import type { Snippet } from 'svelte';
 	import SplitDivider from './SplitDivider.svelte';
 	import { SPLIT_BREAKPOINT, clampSplit, nextSplitFromKey, splitFromDragDelta } from './split.js';
-
-	interface Theme {
-		bg?: string;
-		border?: string;
-		accent?: string;
-		text?: string;
-		textMuted?: string;
-		tabFontSize?: string;
-		radius?: string;
-		borderW?: string;
-		fontFamily?: string;
-		fontSize?: string;
-	}
+	import type { Theme } from './types.js';
 
 	interface Props {
 		width?: string | number;
