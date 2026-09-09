@@ -72,7 +72,7 @@
 		Object.fromEntries(filenames.map((name) => [name, dedent(untrack(() => initial)[name])]))
 	);
 	let activeTab = $state(filenames[0] ?? '');
-	let reloadKey = $state(0);
+	let reloadKey = $state(false);
 	// uncontrolled split, intentionally reads props only once
 	let split = $state(
 		clampSplit(
@@ -96,7 +96,7 @@
 	}
 
 	function reloadPreview() {
-		reloadKey++;
+		reloadKey = !reloadKey;
 	}
 
 	function updateSplitFromDrag(clientX: number, clientY: number) {
@@ -279,7 +279,7 @@
 
 		<div class="preview">
 			{#key reloadKey}
-      	{const srcdoc = $derived(asdf())}
+				{const srcdoc = $derived(asdf())}
 				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
 			{/key}
 			{#if compileErrors.length > 0}
