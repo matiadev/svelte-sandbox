@@ -7,10 +7,6 @@ const lexerReadyPromise: Promise<boolean> = init().then(
 	() => false
 );
 
-export function isLexerReady(): boolean {
-	return lexerReady;
-}
-
 export function ensureLexerReady(): Promise<boolean> {
 	return lexerReadyPromise;
 }
