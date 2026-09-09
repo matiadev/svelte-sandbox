@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import CodeEditor from './CodeEditor.svelte';
 	import { dedentCode } from './dedent.js';
-	import { collectScriptImports, ensureLexerReady, isLexerReady } from './imports.js';
+	import { collectScriptImports, ensureLexerReady } from './imports.js';
 	import Sandbox from './Sandbox.svelte';
 
 	interface Code {
@@ -51,8 +51,6 @@
 		maxSplit?: number;
 	}
 
-	type TabId = (typeof tabs)[number]['id'];
-
 	const {
 		code: initial,
 		width = '100%',
@@ -66,42 +64,22 @@
 		minSplit = 20,
 		maxSplit = 80
 	}: Props = $props();
+
 	let code = $state(dedentCode(untrack(() => initial)));
-	let activeTab = $state('html');
 
-	const tabs = [
-		{ id: 'html', label: 'HTML', language: 'html' },
-		{ id: 'css', label: 'CSS', language: 'css' },
-		{ id: 'script', label: 'JS', language: 'javascript' }
-	] as const;
+	function buildSrcdoc(lexerReady: boolean) {
+		const bareImports = lexerReady ? collectScriptImports(code.script ?? '') : [];
 
-	function switchTab(id: TabId) {
-		activeTab = id;
-	}
+		let importmapJSON;
+		if (bareImports.length === 0) importmapJSON = '';
+		else {
+			const imports = Object.fromEntries(
+				bareImports.map((spec) => [spec, `https://esm.sh/${spec}`])
+			);
+			importmapJSON = JSON.stringify({ imports }, null, 2);
+		}
 
-	let lexerReady = $state(isLexerReady());
-
-	$effect(() => {
-		ensureLexerReady().then((ok) => {
-			lexerReady = ok;
-		});
-	});
-
-	const bareImports = $derived(lexerReady ? collectScriptImports(code.script ?? '') : []);
-
-	const importmap = $derived(
-		bareImports.length === 0
-			? ''
-			: JSON.stringify(
-					{
-						imports: Object.fromEntries(bareImports.map((spec) => [spec, `https://esm.sh/${spec}`]))
-					},
-					null,
-					2
-				)
-	);
-
-	const srcdoc = $derived(`
+		return `
 		<!doctype html>
 		<html lang="en">
 			<head>
@@ -133,7 +111,7 @@
 					}
 				</style>
 				<style>${code.css ?? ''}</style>
-				${importmap ? `<script type="importmap">${importmap}<\/script>` : ''}
+				${importmapJSON ? `<script type="importmap">${importmapJSON}<\/script>` : ''}
 			</head>
 			<body>
 				<div class="app">
@@ -142,7 +120,8 @@
 				<script type="module">${code.script ?? ''}<\/script>
 			</body>
 		</html>
-	`);
+	`;
+	}
 </script>
 
 <Sandbox
@@ -157,9 +136,16 @@
 	max={maxSplit}
 >
 	{#snippet editor()}
+		{let activeTab = $state('html')}
+		{const tabs = [
+			{ id: 'html', label: 'HTML', language: 'html' },
+			{ id: 'css', label: 'CSS', language: 'css' },
+			{ id: 'script', label: 'JS', language: 'javascript' }
+		] as const}
+
 		<div class="tabs">
 			{#each tabs.filter((t) => code[t.id] !== '') as tab (tab.id)}
-				<button class:active={activeTab === tab.id} onclick={() => switchTab(tab.id)}>
+				<button class:active={activeTab === tab.id} onclick={() => (activeTab = tab.id)}>
 					{tab.label}
 				</button>
 			{/each}
@@ -172,9 +158,12 @@
 	{/snippet}
 
 	{#snippet preview(reloadKey)}
-		{#key reloadKey}
-			<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
-		{/key}
+		{#await ensureLexerReady() then lexerReady}
+			{@const srcdoc = buildSrcdoc(lexerReady)}
+			{#key reloadKey}
+				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
+			{/key}
+		{/await}
 	{/snippet}
 </Sandbox>
 
