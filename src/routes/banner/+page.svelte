@@ -32,8 +32,8 @@
 	];
 </script>
 
-<div class={['banner-stage', { clean }]}>
-	<div class={['banner', { clean }]}>
+<div class="banner-stage" class:clean>
+	<div class="banner" class:clean>
 		<header>
 			<h1>@sveltecraft/sandbox</h1>
 			<p>Interactive code sandbox components for Svelte 5</p>
