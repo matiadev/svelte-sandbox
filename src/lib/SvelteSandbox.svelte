@@ -7,7 +7,7 @@
 	import { collectBareImports, ensureLexerReady } from './imports.js';
 	import Sandbox from './Sandbox.svelte';
 	import previewHtml from './preview.html?raw';
-	import previewRuntime from './preview-runtime.ts?raw';
+	import previewRuntime from './preview-runtime.js?raw';
 
 	interface Theme {
 		bg?: string;
