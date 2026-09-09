@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { VERSION } from 'svelte/compiler';
 	import CodeEditor from './CodeEditor.svelte';
+	import { compileFiles } from './compile.js';
 	import { dedent } from './dedent.js';
 
 	interface Theme {
@@ -77,6 +79,12 @@
 		);
 	});
 
+	const compiled = $derived(compileFiles(code));
+
+	const compileErrors = $derived(
+		Object.entries(compiled.errors).map(([file, message]) => `${file}: ${message}`)
+	);
+
 	const tabs = $derived(
 		filenames.map((name) => ({
 			id: name,
@@ -90,8 +98,8 @@
 			{
 				imports: Object.assign(
 					{
-						svelte: 'https://esm.sh/svelte',
-						'svelte/': 'https://esm.sh/svelte/'
+						svelte: `https://esm.sh/svelte@${VERSION}`,
+						'svelte/': `https://esm.sh/svelte@${VERSION}/`
 					},
 					Object.fromEntries(bareImports.map((s) => [s, `https://esm.sh/${s}`]))
 				)
@@ -101,34 +109,19 @@
 		)
 	);
 
-	const sandboxDataJson = $derived(JSON.stringify({ files: code, entry }).replace(/<\//g, '<\\/'));
+	const sandboxDataJson = $derived(
+		JSON.stringify({ files: compiled.js, entry }).replace(/<\//g, '<\\/')
+	);
 
 	const script = `
 		(async () => {
 			const container = document.getElementById('app');
 			try {
-				const { compile } = await import('https://esm.sh/svelte/compiler');
-				const { files: raw, entry } = JSON.parse(document.getElementById('sandbox-data').textContent);
+				const { files: compiled, entry } = JSON.parse(document.getElementById('sandbox-data').textContent);
 				const dir = {};
 
-				async function compileFile(name, source) {
-					if (name.endsWith('.js') || name.endsWith('.ts')) {
-						return new Blob([source], { type: 'text/javascript' });
-					}
-					const result = compile(source, {
-						filename: name,
-						generate: 'client',
-						css: 'injected',
-						dev: false
-					});
-					if (result.css && result.css.code) {
-						document.head.insertAdjacentHTML('beforeend', '<style>' + result.css.code + '</style>');
-					}
-					return new Blob([result.js.code], { type: 'text/javascript' });
-				}
-
-				for (const [name, source] of Object.entries(raw)) {
-					dir[name] = URL.createObjectURL(await compileFile(name, source));
+				for (const [name, js] of Object.entries(compiled)) {
+					dir[name] = URL.createObjectURL(new Blob([js], { type: 'text/javascript' }));
 				}
 
 				for (const [name, url] of Object.entries(dir)) {
@@ -244,6 +237,13 @@
 			{#key reloadKey}
 				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
 			{/key}
+			{#if compileErrors.length > 0}
+				<div class="compile-errors" role="alert">
+					{#each compileErrors as error (error)}
+						<pre>{error}</pre>
+					{/each}
+				</div>
+			{/if}
 			<button class="reload-button" onclick={reloadPreview} aria-label="Reload preview">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -402,6 +402,27 @@
 				width: 1.25rem;
 				height: 1.25rem;
 				display: block;
+			}
+		}
+
+		.compile-errors {
+			position: absolute;
+			right: 0.5rem;
+			bottom: 0.5rem;
+			left: 0.5rem;
+			max-height: 40%;
+			padding: 0.5rem 0.75rem;
+			font-family: monospace;
+			font-size: 0.8rem;
+			color: #e74c3c;
+			background: var(--bg);
+			border: var(--border-w) solid #e74c3c;
+			border-radius: var(--radius);
+			white-space: pre-wrap;
+			overflow: auto;
+
+			pre {
+				margin: 0;
 			}
 		}
 	}
