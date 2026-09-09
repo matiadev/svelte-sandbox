@@ -102,25 +102,30 @@
 	max={maxSplit}
 >
 	{#snippet editor()}
-		{let activeTab = $state('html')}
-		{const tabs = [
-			{ id: 'html', label: 'HTML', language: 'html' },
-			{ id: 'css', label: 'CSS', language: 'css' },
-			{ id: 'script', label: 'JS', language: 'javascript' }
-		] as const}
+		{let activeTab: 'html' | 'css' | 'script' = $state('html')}
+		{const tabs = (
+			[
+				{ id: 'html', label: 'HTML', language: 'html' },
+				{ id: 'css', label: 'CSS', language: 'css' },
+				{ id: 'script', label: 'JS', language: 'javascript' }
+			] as const
+		).filter((t) => code[t.id] !== '')}
+		{const language = {
+			html: 'html',
+			css: 'css',
+			script: 'javascript'
+		}}
 
 		<div class="tabs">
-			{#each tabs.filter((t) => code[t.id] !== '') as tab (tab.id)}
+			{#each tabs as tab (tab.id)}
 				<button class:active={activeTab === tab.id} onclick={() => (activeTab = tab.id)}>
 					{tab.label}
 				</button>
 			{/each}
 		</div>
-		{#each tabs.filter((t) => code[t.id] !== '') as tab (tab.id)}
-			{#if activeTab === tab.id}
-				<CodeEditor bind:value={code[tab.id]} language={tab.language} theme={editorTheme} />
-			{/if}
-		{/each}
+		{#key activeTab}
+			<CodeEditor bind:value={code[activeTab]} language={language[activeTab]} theme={editorTheme} />
+		{/key}
 	{/snippet}
 
 	{#snippet preview(reloadKey)}
