@@ -158,10 +158,10 @@
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<script type="importmap">
 					${importmapJson}
-				<${'/script'}>
+				<\/script>
 				<script id="sandbox-data" type="application/json">
 					${sandboxDataJson}
-				<${'/script'}>
+				<\/script>
 				<style>
 					@layer default {
 						*, *::before, *::after {
@@ -192,7 +192,7 @@
 				<div id="app"></div>
 				<script type="module">
 					${script}
-				<${'/script'}>
+				<\/script>
 			</body>
 		</html>
 	`);

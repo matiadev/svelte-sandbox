@@ -127,13 +127,13 @@
 					}
 				</style>
 				<style>${code.css ?? ''}</style>
-				${importmap ? `<script type="importmap">${importmap}<${'/script'}>` : ''}
+				${importmap ? `<script type="importmap">${importmap}<\/script>` : ''}
 			</head>
 			<body>
 				<div class="app">
 					${code.html ?? ''}
 				</div>
-				<script type="module">${code.script ?? ''}<${'/script'}>
+				<script type="module">${code.script ?? ''}<\/script>
 			</body>
 		</html>
 	`);
