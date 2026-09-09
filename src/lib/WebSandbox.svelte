@@ -4,6 +4,8 @@
 	import { dedentCode } from './dedent.js';
 	import { collectScriptImports, ensureLexerReady } from './imports.js';
 	import Sandbox from './Sandbox.svelte';
+	import { renderDoc } from './preview-doc.js';
+	import previewHtml from './preview.html?raw';
 
 	interface Code {
 		html?: string;
@@ -79,48 +81,12 @@
 			importmapJSON = JSON.stringify({ imports }, null, 2);
 		}
 
-		return `
-		<!doctype html>
-		<html lang="en">
-			<head>
-				<meta charset="UTF-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<style>
-					@layer default {
-						*, *::before, *::after {
-							box-sizing: border-box;
-						}
-
-						body {
-							height: 100svh;
-							margin: 0;
-							font-family: 'Atkinson Hyperlegible', sans-serif;
-							color: #fff;
-							line-height: 1.5;
-							-webkit-font-smoothing: antialiased;
-						}
-
-						img, picture, video, canvas, svg {
-							max-width: 100%;
-							display: block;
-						}
-
-						input, button, textarea, select {
-							font: inherit;
-						}
-					}
-				</style>
-				<style>${code.css ?? ''}</style>
-				${importmapJSON ? `<script type="importmap">${importmapJSON}<\/script>` : ''}
-			</head>
-			<body>
-				<div class="app">
-					${code.html ?? ''}
-				</div>
-				<script type="module">${code.script ?? ''}<\/script>
-			</body>
-		</html>
-	`;
+		return renderDoc(previewHtml, {
+			IMPORTMAP: importmapJSON ? `<script type="importmap">${importmapJSON}<\/script>` : '',
+			USER_CSS: `<style>${code.css ?? ''}</style>`,
+			APP: `<div class="app">${code.html ?? ''}</div>`,
+			MODULE: `<script type="module">${code.script ?? ''}<\/script>`
+		});
 	}
 </script>
 

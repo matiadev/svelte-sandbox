@@ -6,6 +6,7 @@
 	import { dedent } from './dedent.js';
 	import { collectBareImports, ensureLexerReady } from './imports.js';
 	import Sandbox from './Sandbox.svelte';
+	import { renderDoc } from './preview-doc.js';
 	import previewHtml from './preview.html?raw';
 	import previewRuntime from './preview-runtime.js?raw';
 
@@ -89,13 +90,12 @@
 		const importmapJson = JSON.stringify(importMap, null, 2);
 		const sandboxDataJson = JSON.stringify({ files: compiled.js, entry }).replace(/<\//g, '<\\/');
 
-		return previewHtml
-			.split('%IMPORTMAP%')
-			.join(importmapJson)
-			.split('%SANDBOX_DATA%')
-			.join(sandboxDataJson)
-			.split('//%SCRIPT%')
-			.join(previewRuntime);
+		return renderDoc(previewHtml, {
+			IMPORTMAP: `<script type="importmap">${importmapJson}<\/script>`,
+			SANDBOX_DATA: `<script id="sandbox-data" type="application/json">${sandboxDataJson}<\/script>`,
+			APP: '<div id="app"></div>',
+			MODULE: `<script type="module">${previewRuntime}<\/script>`
+		});
 	}
 </script>
 
