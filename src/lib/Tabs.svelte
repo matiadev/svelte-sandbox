@@ -9,7 +9,7 @@
 
 <div class="tabs">
 	{#each tabs as tab (tab.id)}
-		<button class:active={active === tab.id} onclick={() => (active = tab.id)}>
+		<button aria-pressed={active === tab.id} onclick={() => (active = tab.id)}>
 			{tab.label}
 		</button>
 	{/each}
@@ -34,7 +34,7 @@
 				color: var(--text);
 			}
 
-			&.active {
+			&[aria-pressed='true'] {
 				color: var(--text);
 			}
 
@@ -49,7 +49,7 @@
 				opacity: 0;
 			}
 
-			&.active::after {
+			&[aria-pressed='true']::after {
 				opacity: 1;
 			}
 		}
