@@ -7,6 +7,7 @@
 	import { collectBareImports, ensureLexerReady, isLexerReady } from './imports.js';
 	import SplitDivider from './SplitDivider.svelte';
 	import { SPLIT_BREAKPOINT, clampSplit, nextSplitFromKey, splitFromDragDelta } from './split.js';
+	import previewHtml from './preview.html?raw';
 	import Asdf from './asdf.ts?raw';
 
 	interface Theme {
@@ -183,8 +184,6 @@
 		};
 	});
 
-	const bareImports = $derived(lexerReady ? collectBareImports(code) : []);
-
 	const compiled = $derived(compileFiles(code));
 
 	const compileErrors = $derived(
@@ -199,74 +198,28 @@
 		}))
 	);
 
-	const importmapJson = $derived(
-		JSON.stringify(
-			{
-				imports: Object.assign(
-					{
-						svelte: `https://esm.sh/svelte@${VERSION}`,
-						'svelte/': `https://esm.sh/svelte@${VERSION}/`
-					},
-					Object.fromEntries(bareImports.map((s) => [s, `https://esm.sh/${s}`]))
-				)
-			},
-			null,
-			2
-		)
-	);
+	function asdf() {
+		const bareImports = lexerReady ? collectBareImports(code) : [];
+		const importMap = {
+			imports: Object.assign(
+				{
+					svelte: `https://esm.sh/svelte@${VERSION}`,
+					'svelte/': `https://esm.sh/svelte@${VERSION}/`
+				},
+				Object.fromEntries(bareImports.map((s) => [s, `https://esm.sh/${s}`]))
+			)
+		};
+		const importmapJson = JSON.stringify(importMap, null, 2);
+		const sandboxDataJson = JSON.stringify({ files: compiled.js, entry }).replace(/<\//g, '<\\/');
 
-	const sandboxDataJson = $derived(
-		JSON.stringify({ files: compiled.js, entry }).replace(/<\//g, '<\\/')
-	);
-
-	const script = Asdf.trim();
-
-	const srcdoc = $derived(`
-		<!doctype html>
-		<html lang="en">
-			<head>
-				<meta charset="UTF-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<script type="importmap">
-					${importmapJson}
-				<\/script>
-				<script id="sandbox-data" type="application/json">
-					${sandboxDataJson}
-				<\/script>
-				<style>
-					@layer default {
-						*, *::before, *::after {
-							box-sizing: border-box;
-						}
-
-						body {
-							height: 100svh;
-							margin: 0;
-							font-family: 'Atkinson Hyperlegible', sans-serif;
-							color: #fff;
-							line-height: 1.5;
-							-webkit-font-smoothing: antialiased;
-						}
-
-						img, picture, video, canvas, svg {
-							max-width: 100%;
-							display: block;
-						}
-
-						input, button, textarea, select {
-							font: inherit;
-						}
-					}
-				</style>
-			</head>
-			<body>
-				<div id="app"></div>
-				<script type="module">
-					${script}
-				<\/script>
-			</body>
-		</html>
-	`);
+		return previewHtml
+			.split('%IMPORTMAP%')
+			.join(importmapJson)
+			.split('%SANDBOX_DATA%')
+			.join(sandboxDataJson)
+			.split('//%SCRIPT%')
+			.join(Asdf);
+	}
 </script>
 
 <div
@@ -326,6 +279,7 @@
 
 		<div class="preview">
 			{#key reloadKey}
+      	{const srcdoc = $derived(asdf())}
 				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
 			{/key}
 			{#if compileErrors.length > 0}
