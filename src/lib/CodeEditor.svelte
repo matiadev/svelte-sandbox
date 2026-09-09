@@ -1,21 +1,12 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import type { EditorTheme } from './types.js';
+	import type { Language } from './languageMapper.ts';
 
 	interface Props {
 		value?: string;
-		language?: string;
-		theme?: {
-			accent?: string;
-			function?: string;
-			variable?: string;
-			muted?: string;
-			comment?: string;
-			special?: string;
-			text?: string;
-			gutter?: string;
-			fontSize?: string;
-			fontFamily?: string;
-		};
+		language?: Language;
+		theme?: EditorTheme;
 	}
 
 	let { value = $bindable(''), language = 'html', theme }: Props = $props();
