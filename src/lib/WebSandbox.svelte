@@ -68,7 +68,6 @@
 	}: Props = $props();
 	let code = $state(dedentCode(untrack(() => initial)));
 	let activeTab = $state('html');
-	let reloadKey = $state(0);
 
 	const tabs = [
 		{ id: 'html', label: 'HTML', language: 'html' },
@@ -78,10 +77,6 @@
 
 	function switchTab(id: TabId) {
 		activeTab = id;
-	}
-
-	function reloadPreview() {
-		reloadKey++;
 	}
 
 	let lexerReady = $state(isLexerReady());
@@ -176,26 +171,10 @@
 		{/each}
 	{/snippet}
 
-	{#snippet preview()}
+	{#snippet preview(reloadKey)}
 		{#key reloadKey}
 			<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
 		{/key}
-		<button class="reload-button" onclick={reloadPreview} aria-label="Reload preview">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="24"
-				height="24"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-				<path d="M3 3v5h5" />
-			</svg>
-		</button>
 	{/snippet}
 </Sandbox>
 
@@ -236,29 +215,6 @@
 			&.active::after {
 				opacity: 1;
 			}
-		}
-	}
-
-	.reload-button {
-		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		padding: 0.25rem;
-		color: var(--text-muted);
-		background: var(--bg);
-		border: var(--border-w) solid var(--border);
-		border-radius: var(--radius);
-		cursor: pointer;
-		transition: color 0.1s;
-
-		&:hover {
-			color: var(--text);
-		}
-
-		svg {
-			width: 1.25rem;
-			height: 1.25rem;
-			display: block;
 		}
 	}
 </style>
