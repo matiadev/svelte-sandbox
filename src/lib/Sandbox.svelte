@@ -4,18 +4,19 @@
 	import SplitDivider from './SplitDivider.svelte';
 	import { SPLIT_BREAKPOINT, clampSplit, nextSplitFromKey, splitFromDragDelta } from './split.js';
 	import type { Theme } from './types.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	interface Props {
 		width?: string | number;
 		height?: string | number;
-		classes?: string;
+		classes?: ClassValue;
 		theme?: Theme;
 		previewOnly?: boolean;
 		resizable?: boolean;
 		initial?: number;
 		min?: number;
 		max?: number;
-		editor?: Snippet;
+		editor: Snippet;
 		preview: Snippet<[boolean]>;
 	}
 
@@ -43,8 +44,8 @@
 	);
 	let stacked = $state(false);
 	let dragging = $state(false);
-	let containerEl: HTMLDivElement | undefined = $state();
-	let sandboxEl: HTMLDivElement | undefined = $state();
+	let containerEl: HTMLDivElement;
+	let sandboxEl: HTMLDivElement;
 	/*
 	 * Grab point recorded at drag start.
 	 * Moves apply as a delta so a click without dragging never moves the split.
