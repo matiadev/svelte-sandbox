@@ -1,29 +1,104 @@
 <script lang="ts">
+	import { on } from 'svelte/events';
+	import { nextSplitFromKey, splitFromDragDelta } from './split.js';
+
 	interface Props {
-		stacked?: boolean;
 		split?: number;
+		stacked?: boolean;
 		min?: number;
 		max?: number;
 		dragging?: boolean;
-		onpointerdown: (event: PointerEvent) => void;
-		onpointermove: (event: PointerEvent) => void;
-		onpointerup: (event: PointerEvent) => void;
-		onpointercancel: (event: PointerEvent) => void;
-		onkeydown: (event: KeyboardEvent) => void;
 	}
 
-	const {
+	let {
+		split = $bindable(50),
 		stacked = false,
-		split = 50,
 		min = 20,
 		max = 80,
-		dragging = false,
-		onpointerdown,
-		onpointermove,
-		onpointerup,
-		onpointercancel,
-		onkeydown
+		dragging = $bindable(false)
 	}: Props = $props();
+
+	/*
+	 * Grab point recorded at drag start.
+	 * Moves apply as a delta so a click without dragging never moves the split.
+	 */
+	let dragStart: { id: number; x: number; y: number; split: number } | null = null;
+
+	function resetBodyStyles() {
+		document.body.style.cursor = '';
+		document.body.style.userSelect = '';
+	}
+
+	/**
+	 * Drag and keyboard behavior for the divider element.
+	 * Props are only read inside listeners (not at attach time) so the
+	 * attachment never re-binds on unrelated state changes.
+	 */
+	function dragHandle(node: HTMLDivElement) {
+		function handlePointerDown(event: PointerEvent) {
+			dragging = true;
+			dragStart = { id: event.pointerId, x: event.clientX, y: event.clientY, split };
+			try {
+				node.setPointerCapture(event.pointerId);
+			} catch {
+				// noop for synthetic or stale pointer id
+			}
+			document.body.style.cursor = stacked ? 'row-resize' : 'col-resize';
+			document.body.style.userSelect = 'none';
+			event.preventDefault();
+		}
+
+		function handlePointerMove(event: PointerEvent) {
+			if (!dragging || !dragStart || event.pointerId !== dragStart.id) return;
+			const rect = node.parentElement?.getBoundingClientRect();
+			if (!rect) return;
+			split = splitFromDragDelta(
+				dragStart.split,
+				dragStart.x,
+				dragStart.y,
+				event.clientX,
+				event.clientY,
+				rect,
+				stacked,
+				min,
+				max
+			);
+			event.preventDefault();
+		}
+
+		function handlePointerUp(event: PointerEvent) {
+			if (!dragging) return;
+			dragging = false;
+			dragStart = null;
+			resetBodyStyles();
+			try {
+				node.releasePointerCapture(event.pointerId);
+			} catch {
+				// noop when capture is already released
+			}
+		}
+
+		function handleKeyDown(event: KeyboardEvent) {
+			const next = nextSplitFromKey(split, event.key, event.shiftKey, min, max);
+			if (next !== null) {
+				split = next;
+				event.preventDefault();
+			}
+		}
+
+		const teardowns = [
+			on(node, 'pointerdown', handlePointerDown),
+			on(node, 'pointermove', handlePointerMove),
+			on(node, 'pointerup', handlePointerUp),
+			on(node, 'pointercancel', handlePointerUp),
+			on(node, 'keydown', handleKeyDown)
+		];
+
+		return () => {
+			teardowns.forEach((teardown) => teardown());
+			resetBodyStyles();
+		};
+	}
 </script>
 
 <div
@@ -37,11 +112,7 @@
 	aria-valuemax={max}
 	aria-label="Resize panels"
 	tabindex={0}
-	{onpointerdown}
-	{onpointermove}
-	{onpointerup}
-	{onpointercancel}
-	{onkeydown}
+	{@attach dragHandle}
 ></div>
 
 <style>

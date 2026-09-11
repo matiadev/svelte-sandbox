@@ -13,15 +13,15 @@ describe('SvelteSandbox.svelte', () => {
 	it('renders a tab per file', async () => {
 		render(SvelteSandbox, { files });
 
-		await expect.element(page.getByRole('button', { name: 'App.svelte' })).toBeInTheDocument();
-		await expect.element(page.getByRole('button', { name: 'util.js' })).toBeInTheDocument();
+		await expect.element(page.getByRole('tab', { name: 'App.svelte' })).toBeInTheDocument();
+		await expect.element(page.getByRole('tab', { name: 'util.js' })).toBeInTheDocument();
 	});
 
 	it('hides the editor in previewOnly mode', async () => {
 		render(SvelteSandbox, { files, previewOnly: true });
 
 		await expect.element(page.getByTitle('sandbox')).toBeInTheDocument();
-		await expect.element(page.getByRole('button', { name: 'App.svelte' })).not.toBeInTheDocument();
+		await expect.element(page.getByRole('tab', { name: 'App.svelte' })).not.toBeInTheDocument();
 	});
 
 	describe('resizable panels', () => {
