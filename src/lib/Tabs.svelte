@@ -7,9 +7,14 @@
 	let { tabs, active = $bindable() }: Props = $props();
 </script>
 
-<div class="tabs">
+<div class="tabs" role="tablist">
 	{#each tabs as tab (tab.id)}
-		<button aria-pressed={active === tab.id} onclick={() => (active = tab.id)}>
+		<button
+			role="tab"
+			aria-selected={active === tab.id}
+			class:active={active === tab.id}
+			onclick={() => (active = tab.id)}
+		>
 			{tab.label}
 		</button>
 	{/each}
@@ -34,7 +39,7 @@
 				color: var(--text);
 			}
 
-			&[aria-pressed='true'] {
+			&.active {
 				color: var(--text);
 			}
 
@@ -49,7 +54,7 @@
 				opacity: 0;
 			}
 
-			&[aria-pressed='true']::after {
+			&.active::after {
 				opacity: 1;
 			}
 		}

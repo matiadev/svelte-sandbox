@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { Snippet } from 'svelte';
-	import SplitDivider from './SplitDivider2.svelte';
+	import SplitDivider from './SplitDivider.svelte';
 	import { SPLIT_BREAKPOINT, clampSplit } from './split.js';
 	import type { Theme } from './types.js';
 	import type { ClassValue } from 'svelte/elements';
@@ -17,7 +17,7 @@
 		initial?: number;
 		min?: number;
 		max?: number;
-		editor: Snippet;
+		editor?: Snippet;
 		preview: Snippet<[boolean]>;
 	}
 

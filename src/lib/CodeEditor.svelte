@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { EditorTheme } from './types.js';
-	import type { Language } from './languageMapper.ts';
+	import type { Language } from './languageMapper.js';
 
 	interface Props {
 		value?: string;

@@ -10,7 +10,7 @@
 	import { renderDoc } from './preview-doc.js';
 	import previewHtml from './preview.html?raw';
 	import previewRuntime from './preview-runtime.js?raw';
-	import { language } from './languageMapper.ts';
+	import { language } from './languageMapper.js';
 	import type { SharedProps } from './types.js';
 
 	interface Props extends SharedProps {
@@ -81,7 +81,7 @@
 		{#key activeTab}
 			<CodeEditor
 				bind:value={code[activeTab]}
-				language={language[activeTab.split('.').pop() as keyof typeof language]}
+				language={language[activeTab.split('.').pop() as keyof typeof language] ?? 'javascript'}
 				theme={editorTheme}
 			/>
 		{/key}

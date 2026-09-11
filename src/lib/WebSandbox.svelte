@@ -7,7 +7,7 @@
 	import Tabs from './Tabs.svelte';
 	import { renderDoc } from './preview-doc.js';
 	import previewHtml from './preview.html?raw';
-	import { language } from './languageMapper.ts';
+	import { language } from './languageMapper.js';
 	import type { Code, SharedProps } from './types.js';
 
 	interface Props extends SharedProps {
