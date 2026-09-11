@@ -30,7 +30,7 @@
 	}
 
 	/**
-	 * Drag + keyboard behavior for the divider element.
+	 * Drag and keyboard behavior for the divider element.
 	 * Props are only read inside listeners (not at attach time) so the
 	 * attachment never re-binds on unrelated state changes.
 	 */
