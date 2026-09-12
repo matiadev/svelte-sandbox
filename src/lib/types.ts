@@ -1,3 +1,5 @@
+import type { ClassValue } from 'svelte/elements';
+
 export interface Code {
 	html?: string;
 	css?: string;
@@ -36,7 +38,7 @@ export interface SharedProps {
 	theme?: Theme;
 	editorTheme?: EditorTheme;
 	previewOnly?: boolean;
-	classes?: string;
+	classes?: ClassValue;
 	previewTitle?: string;
 	resizable?: boolean;
 	initialSplit?: number;

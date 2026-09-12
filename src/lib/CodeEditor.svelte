@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import type { Attachment } from 'svelte/attachments';
 	import type { EditorTheme } from './types.js';
 	import type { Language } from './languageMapper.js';
 
@@ -11,7 +12,8 @@
 
 	let { value = $bindable(''), language = 'html', theme }: Props = $props();
 
-	function editor(container: HTMLElement) {
+	const editor: Attachment<HTMLDivElement> = (container) => {
+		let cancelled = false;
 		let view: { destroy: () => void } | undefined;
 
 		(async () => {
@@ -35,7 +37,10 @@
 				import('@codemirror/lang-javascript')
 			]);
 
-			const lang = language === 'css' ? css() : language === 'javascript' ? javascript() : html();
+			if (cancelled) return;
+
+			const extensions = { css, javascript, html };
+			const lang = extensions[language]();
 
 			const minimalSetup = [
 				highlightSpecialChars(),
@@ -115,8 +120,12 @@
 				parent: container
 			});
 		})();
-		return () => view?.destroy();
-	}
+
+		return () => {
+			cancelled = true;
+			view?.destroy();
+		};
+	};
 </script>
 
 <div class="editor" {@attach editor}></div>

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import type { Snippet } from 'svelte';
 	import SplitDivider from './SplitDivider.svelte';
 	import { SPLIT_BREAKPOINT, clampSplit } from './split.js';
-	import type { Theme } from './types.js';
-	import type { ClassValue } from 'svelte/elements';
+	import type { Snippet } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
+	import type { ClassValue } from 'svelte/elements';
+	import type { Theme } from './types.js';
 
 	interface Props {
 		width?: string | number;
@@ -43,8 +43,10 @@
 			untrack(() => max)
 		)
 	);
+
 	let stacked = $state(false);
 	let dragging = $state(false);
+
 	const observeStacked: Attachment<HTMLDivElement> = (node) => {
 		const update = () => {
 			stacked = node.clientWidth <= SPLIT_BREAKPOINT;
@@ -57,16 +59,16 @@
 </script>
 
 <div
-	class="sandbox-container {classes}"
+	class={['sandbox-container', classes]}
 	{@attach observeStacked}
 	style:width={typeof width === 'number' ? `${width}px` : width}
 	style:height={typeof height === 'number' ? `${height}px` : height}
 >
 	<div
-		class="sandbox"
-		class:preview-only={previewOnly}
-		class:dragging
-		class:has-divider={resizable && !previewOnly}
+		class={[
+			'sandbox',
+			{ 'preview-only': previewOnly, dragging, 'has-divider': resizable && !previewOnly }
+		]}
 		style:--bg={theme?.bg}
 		style:--border={theme?.border}
 		style:--accent={theme?.accent}

@@ -53,6 +53,7 @@
 		const bareImports = lexerReady ? collectScriptImports(code.script ?? '') : [];
 
 		let importmapJSON;
+
 		if (bareImports.length === 0) importmapJSON = '';
 		else {
 			const imports = Object.fromEntries(

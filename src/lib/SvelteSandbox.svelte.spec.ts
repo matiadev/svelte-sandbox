@@ -1,6 +1,6 @@
+import { tick } from 'svelte';
 import { page } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
-import { tick } from 'svelte';
 import { render } from 'vitest-browser-svelte';
 import SvelteSandbox from './SvelteSandbox.svelte';
 
