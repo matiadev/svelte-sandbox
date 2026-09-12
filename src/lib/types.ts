@@ -12,6 +12,7 @@ export interface Theme {
 	accent?: string;
 	text?: string;
 	textMuted?: string;
+	error?: string;
 	tabFontSize?: string;
 	radius?: string;
 	borderW?: string;

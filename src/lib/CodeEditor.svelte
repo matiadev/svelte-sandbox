@@ -1,7 +1,23 @@
+<script module lang="ts">
+	import type { EditorTheme } from './types.js';
+
+	export const DEFAULT_EDITOR_THEME: Required<EditorTheme> = {
+		accent: '#5de4c7',
+		function: '#add7ff',
+		variable: '#e4f0fb',
+		muted: '#a6accd',
+		comment: '#767c9d',
+		special: '#d0679d',
+		text: '#fff',
+		gutter: '#767c9d',
+		fontSize: '14px',
+		fontFamily: 'JetBrains Mono'
+	};
+</script>
+
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
-	import type { EditorTheme } from './types.js';
 	import type { Language } from './languageMapper.js';
 
 	interface Props {
@@ -39,6 +55,8 @@
 
 			if (cancelled) return;
 
+			const resolved = { ...DEFAULT_EDITOR_THEME, ...theme };
+
 			const extensions = { css, javascript, html };
 			const lang = extensions[language]();
 
@@ -51,32 +69,32 @@
 			];
 
 			const poimandresHighlight = HighlightStyle.define([
-				{ tag: tags.keyword, color: theme?.accent ?? '#5de4c7' },
-				{ tag: tags.string, color: theme?.accent ?? '#5de4c7' },
-				{ tag: tags.number, color: theme?.accent ?? '#5de4c7' },
-				{ tag: tags.tagName, color: theme?.accent ?? '#5de4c7' },
-				{ tag: tags.function(tags.variableName), color: theme?.function ?? '#add7ff' },
-				{ tag: tags.className, color: theme?.function ?? '#add7ff' },
-				{ tag: tags.variableName, color: theme?.variable ?? '#e4f0fb' },
-				{ tag: tags.propertyName, color: theme?.variable ?? '#e4f0fb' },
-				{ tag: tags.typeName, color: theme?.muted ?? '#a6accd' },
-				{ tag: tags.punctuation, color: theme?.muted ?? '#a6accd' },
+				{ tag: tags.keyword, color: resolved.accent },
+				{ tag: tags.string, color: resolved.accent },
+				{ tag: tags.number, color: resolved.accent },
+				{ tag: tags.tagName, color: resolved.accent },
+				{ tag: tags.function(tags.variableName), color: resolved.function },
+				{ tag: tags.className, color: resolved.function },
+				{ tag: tags.variableName, color: resolved.variable },
+				{ tag: tags.propertyName, color: resolved.variable },
+				{ tag: tags.typeName, color: resolved.muted },
+				{ tag: tags.punctuation, color: resolved.muted },
 				{ tag: tags.operator, color: theme?.muted ?? '#91b4d5' },
 				{ tag: tags.attributeName, color: theme?.muted ?? '#91b4d5' },
-				{ tag: tags.comment, color: theme?.comment ?? '#767c9d' },
-				{ tag: tags.bool, color: theme?.special ?? '#d0679d' },
-				{ tag: tags.null, color: theme?.special ?? '#d0679d' }
+				{ tag: tags.comment, color: resolved.comment },
+				{ tag: tags.bool, color: resolved.special },
+				{ tag: tags.null, color: resolved.special }
 			]);
 
 			const poimandresTheme = EditorView.theme(
 				{
 					'&': {
-						fontSize: theme?.fontSize ?? '14px',
-						color: theme?.text ?? '#fff',
+						fontSize: resolved.fontSize,
+						color: resolved.text,
 						height: '100%'
 					},
 					'& .cm-scroller': {
-						fontFamily: theme?.fontFamily ?? 'JetBrains Mono',
+						fontFamily: resolved.fontFamily,
 						scrollbarWidth: 'thin'
 					},
 					'& .cm-scroller::-webkit-scrollbar': {
@@ -85,7 +103,7 @@
 					},
 					'.cm-gutters': {
 						background: 'transparent',
-						color: theme?.gutter ?? '#767c9d',
+						color: resolved.gutter,
 						border: 'none'
 					},
 					'.cm-activeLineGutter': {

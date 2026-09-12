@@ -62,7 +62,7 @@
 
 		button {
 			position: relative;
-			padding: 0.6rem 1rem;
+			padding: var(--tab-padding);
 			font-family: inherit;
 			font-size: var(--tab-font-size);
 			color: var(--text-muted);
@@ -85,7 +85,7 @@
 				bottom: 0;
 				left: 0;
 				width: 100%;
-				height: 2px;
+				height: var(--tab-underline-w);
 				background: var(--accent);
 				opacity: 0;
 			}

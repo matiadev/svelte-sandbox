@@ -74,6 +74,7 @@
 		style:--accent={theme?.accent}
 		style:--text={theme?.text}
 		style:--text-muted={theme?.textMuted}
+		style:--error={theme?.error}
 		style:--radius={theme?.radius}
 		style:--tab-font-size={theme?.tabFontSize}
 		style:--border-w={theme?.borderW}
@@ -136,6 +137,13 @@
 		--accent: #52ffeb;
 		--text-muted: #c2c7d6;
 		--text: #e4f0fb;
+		--error: #e74c3c;
+		--space-xs: 0.25rem;
+		--space-sm: 0.5rem;
+		--space-md: 1rem;
+		--tab-padding: 0.6rem var(--space-md);
+		--tab-underline-w: 2px;
+		--icon-size: 1.25rem;
 		--tab-font-size: 1rem;
 		--radius: 0.5rem;
 		--split: 50%;
@@ -226,9 +234,9 @@
 
 	.reload-button {
 		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		padding: 0.25rem;
+		top: var(--space-sm);
+		right: var(--space-sm);
+		padding: var(--space-xs);
 		color: var(--text-muted);
 		background: var(--bg);
 		border: var(--border-w) solid var(--border);
@@ -241,8 +249,8 @@
 		}
 
 		svg {
-			width: 1.25rem;
-			height: 1.25rem;
+			width: var(--icon-size);
+			height: var(--icon-size);
 			display: block;
 		}
 	}

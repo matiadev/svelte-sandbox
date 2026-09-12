@@ -1,9 +1,11 @@
 (async () => {
 	const container = document.getElementById('app');
+	let error;
 	try {
-		const { files: compiled, entry } = JSON.parse(
-			document.getElementById('sandbox-data').textContent
-		);
+		const data = JSON.parse(document.getElementById('sandbox-data').textContent);
+		const { files: compiled, entry } = data;
+
+		error = data.error;
 		const dir = {};
 
 		for (const [name, js] of Object.entries(compiled)) {
@@ -27,7 +29,7 @@
 		mount(Component, { target: container });
 	} catch (err) {
 		container.textContent = 'Error: ' + (err.message ?? err);
-		container.style.color = '#e74c3c';
+		if (error) container.style.color = error;
 		container.style.padding = '1rem';
 		container.style.fontFamily = 'monospace';
 		container.style.whiteSpace = 'pre-wrap';

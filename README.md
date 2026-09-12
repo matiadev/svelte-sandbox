@@ -165,18 +165,19 @@ The underlying CodeMirror 6 editor is also exported if you want to use it standa
 
 ### Container (`theme`)
 
-| Prop          | Default                               | Description                         |
-| ------------- | ------------------------------------- | ----------------------------------- |
-| `bg`          | `#1b1e27`                             | Background color                    |
-| `border`      | `#29303d`                             | Border color                        |
-| `accent`      | `#52ffeb`                             | Accent color (active tab underline) |
-| `text`        | `#e4f0fb`                             | Text color                          |
-| `textMuted`   | `#c2c7d6`                             | Muted text color (inactive tabs)    |
-| `tabFontSize` | `1rem`                                | Tab button font size                |
-| `radius`      | `0.5rem`                              | Border radius                       |
-| `borderW`     | `1px`                                 | Border width                        |
-| `fontFamily`  | `'Atkinson Hyperlegible', sans-serif` | Container font family               |
-| `fontSize`    | `1rem`                                | Container font size                 |
+| Prop          | Default                               | Description                            |
+| ------------- | ------------------------------------- | -------------------------------------- |
+| `bg`          | `#1b1e27`                             | Background color                       |
+| `border`      | `#29303d`                             | Border color                           |
+| `accent`      | `#52ffeb`                             | Accent color (active tab underline)    |
+| `text`        | `#e4f0fb`                             | Text color                             |
+| `textMuted`   | `#c2c7d6`                             | Muted text color (inactive tabs)       |
+| `error`       | `#e74c3c`                             | Error color (compile + runtime errors) |
+| `tabFontSize` | `1rem`                                | Tab button font size                   |
+| `radius`      | `0.5rem`                              | Border radius                          |
+| `borderW`     | `1px`                                 | Border width                           |
+| `fontFamily`  | `'Atkinson Hyperlegible', sans-serif` | Container font family                  |
+| `fontSize`    | `1rem`                                | Container font size                    |
 
 ### Editor (`editorTheme`)
 

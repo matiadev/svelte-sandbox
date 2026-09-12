@@ -131,7 +131,7 @@
 	.no-files,
 	.preview-loading,
 	.preview-error {
-		padding: 1rem;
+		padding: var(--space-md);
 		font-size: 0.9rem;
 		color: var(--text-muted);
 	}

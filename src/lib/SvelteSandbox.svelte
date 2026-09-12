@@ -52,7 +52,11 @@
 			)
 		};
 		const importmapJson = JSON.stringify(importMap, null, 2);
-		const sandboxDataJson = JSON.stringify({ files: compiled.js, entry }).replace(/<\//g, '<\\/');
+		const error = theme?.error ?? '#e74c3c';
+		const sandboxDataJson = JSON.stringify({ files: compiled.js, entry, error }).replace(
+			/<\//g,
+			'<\\/'
+		);
 
 		return renderDoc(previewHtml, {
 			IMPORTMAP: `<script type="importmap">${importmapJson}<\/script>`,
@@ -136,23 +140,23 @@
 	.no-files,
 	.preview-loading,
 	.preview-error {
-		padding: 1rem;
+		padding: var(--space-md);
 		font-size: 0.9rem;
 		color: var(--text-muted);
 	}
 
 	.compile-errors {
 		position: absolute;
-		right: 0.5rem;
-		bottom: 0.5rem;
-		left: 0.5rem;
+		right: var(--space-sm);
+		bottom: var(--space-sm);
+		left: var(--space-sm);
 		max-height: 40%;
-		padding: 0.5rem 0.75rem;
+		padding: var(--space-sm) var(--space-md);
 		font-family: monospace;
 		font-size: 0.8rem;
-		color: #e74c3c;
+		color: var(--error);
 		background: var(--bg);
-		border: var(--border-w) solid #e74c3c;
+		border: var(--border-w) solid var(--error);
 		border-radius: var(--radius);
 		white-space: pre-wrap;
 		overflow: auto;
