@@ -37,6 +37,7 @@ export interface SharedProps {
 	editorTheme?: EditorTheme;
 	previewOnly?: boolean;
 	classes?: string;
+	previewTitle?: string;
 	resizable?: boolean;
 	initialSplit?: number;
 	minSplit?: number;

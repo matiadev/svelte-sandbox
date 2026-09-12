@@ -27,6 +27,7 @@
 		editorTheme,
 		previewOnly = false,
 		classes = '',
+		previewTitle = 'Svelte preview',
 		resizable = true,
 		initialSplit = 50,
 		minSplit = 20,
@@ -74,32 +75,47 @@
 	max={maxSplit}
 >
 	{#snippet editor()}
-		{const tabs = $derived(filenames.map((name) => ({ id: name, label: name })))}
+		{const tabs = filenames.map((name) => ({ id: name, label: name }))}
 		{let activeTab = $state(filenames[0] ?? '')}
-		<Tabs {tabs} bind:active={activeTab} />
+		{#if tabs.length === 0}
+			<p class="no-files">No files to edit.</p>
+		{:else}
+			<Tabs {tabs} bind:active={activeTab} label="Svelte files" idPrefix="svelte" />
 
-		{#key activeTab}
-			<CodeEditor
-				bind:value={code[activeTab]}
-				language={language[activeTab.split('.').pop() as keyof typeof language] ?? 'javascript'}
-				theme={editorTheme}
-			/>
-		{/key}
+			{#key activeTab}
+				<div
+					role="tabpanel"
+					id="svelte-panel-{activeTab}"
+					aria-labelledby="svelte-tab-{activeTab}"
+					tabindex="0"
+				>
+					<CodeEditor
+						bind:value={code[activeTab]}
+						language={language[activeTab.split('.').pop() as keyof typeof language] ?? 'javascript'}
+						theme={editorTheme}
+					/>
+				</div>
+			{/key}
+		{/if}
 	{/snippet}
 
 	{#snippet preview(reloadKey)}
-		{#await ensureLexerReady() then lexerReady}
+		{#await ensureLexerReady()}
+			<p class="preview-loading">Loading preview…</p>
+		{:then lexerReady}
 			{@const srcdoc = buildSrcdoc(lexerReady)}
 			{#key reloadKey}
-				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
+				<iframe {srcdoc} title={previewTitle} sandbox="allow-scripts"></iframe>
 			{/key}
+		{:catch}
+			<p class="preview-error" role="alert">Could not load preview.</p>
 		{/await}
 
 		{const compileErrors = $derived(
 			Object.entries(compiled.errors).map(([file, message]) => `${file}: ${message}`)
 		)}
 		{#if compileErrors.length > 0}
-			<div class="compile-errors" role="alert">
+			<div class="compile-errors" role="status">
 				{#each compileErrors as error (error)}
 					<pre>{error}</pre>
 				{/each}
@@ -109,6 +125,22 @@
 </Sandbox>
 
 <style>
+	[role='tabpanel'] {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.no-files,
+	.preview-loading,
+	.preview-error {
+		padding: 1rem;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+	}
+
 	.compile-errors {
 		position: absolute;
 		right: 0.5rem;

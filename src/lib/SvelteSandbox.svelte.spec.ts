@@ -20,7 +20,7 @@ describe('SvelteSandbox.svelte', () => {
 	it('hides the editor in previewOnly mode', async () => {
 		render(SvelteSandbox, { files, previewOnly: true });
 
-		await expect.element(page.getByTitle('sandbox')).toBeInTheDocument();
+		await expect.element(page.getByTitle('Svelte preview')).toBeInTheDocument();
 		await expect.element(page.getByRole('tab', { name: 'App.svelte' })).not.toBeInTheDocument();
 	});
 

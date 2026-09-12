@@ -22,6 +22,7 @@
 		editorTheme,
 		previewOnly = false,
 		classes = '',
+		previewTitle = 'Web preview',
 		resizable = true,
 		initialSplit = 50,
 		minSplit = 20,
@@ -29,6 +30,24 @@
 	}: Props = $props();
 
 	let code = $state(dedentCode(untrack(() => initial)));
+
+	const panes = [
+		{ id: 'html', label: 'HTML' },
+		{ id: 'css', label: 'CSS' },
+		{ id: 'script', label: 'JS' }
+	] as const;
+
+	type PaneId = (typeof panes)[number]['id'];
+
+	const tabs = $derived(panes.filter((t) => code[t.id] !== ''));
+
+	let activeTab: PaneId = $state(untrack(() => panes.find((t) => code[t.id] !== '')?.id ?? 'html'));
+
+	$effect(() => {
+		if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
+			activeTab = tabs[0].id;
+		}
+	});
 
 	function buildSrcdoc(lexerReady: boolean) {
 		const bareImports = lexerReady ? collectScriptImports(code.script ?? '') : [];
@@ -63,27 +82,56 @@
 	max={maxSplit}
 >
 	{#snippet editor()}
-		{const tabs = (
-			[
-				{ id: 'html', label: 'HTML' },
-				{ id: 'css', label: 'CSS' },
-				{ id: 'script', label: 'JS' }
-			] as const
-		).filter((t) => code[t.id] !== '')}
-		{let activeTab = $state(tabs[0].id)}
-		<Tabs {tabs} bind:active={activeTab} />
+		{#if tabs.length === 0}
+			<p class="no-files">No code to edit.</p>
+		{:else}
+			<Tabs {tabs} bind:active={activeTab} label="Web files" idPrefix="web" />
 
-		{#key activeTab}
-			<CodeEditor bind:value={code[activeTab]} language={language[activeTab]} theme={editorTheme} />
-		{/key}
+			{#key activeTab}
+				<div
+					role="tabpanel"
+					id="web-panel-{activeTab}"
+					aria-labelledby="web-tab-{activeTab}"
+					tabindex="0"
+				>
+					<CodeEditor
+						bind:value={code[activeTab]}
+						language={language[activeTab]}
+						theme={editorTheme}
+					/>
+				</div>
+			{/key}
+		{/if}
 	{/snippet}
 
 	{#snippet preview(reloadKey)}
-		{#await ensureLexerReady() then lexerReady}
+		{#await ensureLexerReady()}
+			<p class="preview-loading">Loading preview…</p>
+		{:then lexerReady}
 			{@const srcdoc = buildSrcdoc(lexerReady)}
 			{#key reloadKey}
-				<iframe {srcdoc} title="sandbox" sandbox="allow-scripts"></iframe>
+				<iframe {srcdoc} title={previewTitle} sandbox="allow-scripts"></iframe>
 			{/key}
+		{:catch}
+			<p class="preview-error" role="alert">Could not load preview.</p>
 		{/await}
 	{/snippet}
 </Sandbox>
+
+<style>
+	[role='tabpanel'] {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.no-files,
+	.preview-loading,
+	.preview-error {
+		padding: 1rem;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+	}
+</style>
