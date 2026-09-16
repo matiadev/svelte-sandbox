@@ -11,11 +11,11 @@
 
 	<section>
 		<h2>Web Sandbox</h2>
-		<WebSandbox height={400} code={webCode} />
+		<WebSandbox sandbox={{ height: 400 }} code={webCode} />
 	</section>
 
 	<section>
 		<h2>Svelte Sandbox</h2>
-		<SvelteSandbox height={400} files={svelteFiles} />
+		<SvelteSandbox sandbox={{ height: 400 }} files={svelteFiles} />
 	</section>
 </div>

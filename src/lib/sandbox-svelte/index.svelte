@@ -1,35 +1,21 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { VERSION } from 'svelte/compiler';
-	import { compileFiles } from './compileFiles.js';
-	import { dedent } from '../utils/dedent.js';
-	import type { Collector } from '../preview/imports.js';
+	import { compileFiles } from './compileFiles.ts';
+	import { dedent } from '../utils/dedent.ts';
+	import type { Collector } from '../preview/imports.ts';
 	import Sandbox from '../container/Sandbox.svelte';
-	import type { Slots } from '../preview/renderCode.js';
+	import type { Slots } from '../preview/renderCode.ts';
 	import previewRuntime from '../preview/runtime.js?raw';
-	import { language } from '../editor/languageMapper.js';
-	import type { SandboxConfig, SandboxFile, SharedProps } from '../types.js';
+	import { language } from '../editor/languageMapper.ts';
+	import type { SandboxFile, SharedProps } from '../types.ts';
 
 	interface Props extends SharedProps {
 		entry?: string;
 		files: Record<string, string>;
 	}
 
-	const {
-		entry = 'App.svelte',
-		files: initial,
-		width = '100%',
-		height = '100%',
-		theme,
-		editorTheme,
-		previewOnly = false,
-		classes = '',
-		previewTitle = 'Svelte preview',
-		resizable = true,
-		initialSplit = 50,
-		minSplit = 20,
-		maxSplit = 80
-	}: Props = $props();
+	const { entry = 'App.svelte', files: initial, sandbox, editor, preview, theme }: Props = $props();
 
 	let code: SandboxFile[] = $state(
 		untrack(() =>
@@ -72,19 +58,12 @@
 			MODULE: `<script type="module">${previewRuntime}<\/script>`
 		};
 	}
-
-	const sandbox: SandboxConfig = $derived({
-		width,
-		height,
-		class: classes,
-		resizable: resizable ? { initial: initialSplit, min: minSplit, max: maxSplit } : false
-	});
 </script>
 
 <Sandbox
 	{theme}
 	{sandbox}
-	preview={{ name: previewTitle, build: buildSlots, errors }}
-	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Svelte files' }}
+	preview={{ ...preview, name: 'Svelte preview', build: buildSlots, errors }}
+	editor={{ ...editor, name: 'Svelte files' }}
 	bind:code
 />

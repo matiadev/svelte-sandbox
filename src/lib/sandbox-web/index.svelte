@@ -1,29 +1,16 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { dedent } from '../utils/dedent.js';
-	import { type Collector } from '../preview/imports.js';
+	import { dedent } from '../utils/dedent.ts';
+	import { type Collector } from '../preview/imports.ts';
 	import Sandbox from '../container/Sandbox.svelte';
-	import type { Slots } from '../preview/renderCode.js';
-	import type { Code, SandboxConfig, SandboxFile, SharedProps } from '../types.js';
+	import type { Slots } from '../preview/renderCode.ts';
+	import type { Code, SandboxFile, SharedProps } from '../types.ts';
 
 	interface Props extends SharedProps {
 		code?: Code;
 	}
 
-	const {
-		code: initial,
-		width = '100%',
-		height = '100%',
-		theme,
-		editorTheme,
-		previewOnly = false,
-		classes = '',
-		previewTitle = 'Web preview',
-		resizable = true,
-		initialSplit = 50,
-		minSplit = 20,
-		maxSplit = 80
-	}: Props = $props();
+	const { code: initial, sandbox, editor, preview, theme }: Props = $props();
 
 	let code: SandboxFile[] = $state(
 		untrack(() => [
@@ -62,19 +49,12 @@
 			MODULE: `<script type="module">${content('script')}<\/script>`
 		};
 	}
-
-	const sandbox: SandboxConfig = $derived({
-		width,
-		height,
-		class: classes,
-		resizable: resizable ? { initial: initialSplit, min: minSplit, max: maxSplit } : false
-	});
 </script>
 
 <Sandbox
 	{theme}
 	{sandbox}
-	preview={{ name: previewTitle, build: buildSlots }}
-	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Web files' }}
+	preview={{ ...preview, name: 'Web preview', build: buildSlots }}
+	editor={{ ...editor, name: 'Web files' }}
 	bind:code
 />

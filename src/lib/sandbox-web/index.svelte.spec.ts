@@ -24,10 +24,17 @@ describe('WebSandbox.svelte', () => {
 		await expect.element(page.getByTitle('Web preview')).toBeInTheDocument();
 	});
 
-	it('hides the editor in previewOnly mode', async () => {
-		render(WebSandbox, { code, previewOnly: true });
+	it('hides the editor when disabled', async () => {
+		render(WebSandbox, { code, editor: { enable: false } });
 
 		await expect.element(page.getByTitle('Web preview')).toBeInTheDocument();
 		await expect.element(page.getByRole('tab', { name: 'HTML' })).not.toBeInTheDocument();
+	});
+
+	it('hides the preview when disabled', async () => {
+		render(WebSandbox, { code, preview: { enable: false } });
+
+		await expect.element(page.getByTitle('Web preview')).not.toBeInTheDocument();
+		await expect.element(page.getByRole('tab', { name: 'HTML' })).toBeInTheDocument();
 	});
 });

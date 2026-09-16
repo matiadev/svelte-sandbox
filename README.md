@@ -20,8 +20,7 @@ An interactive HTML/CSS/JS sandbox with editable source panels and live preview:
 </script>
 
 <WebSandbox
-	width={800}
-	height={400}
+	sandbox={{ width: 800, height: 400 }}
 	code={{
 		html: `<button>Clicks: 0</button>`,
 		css: `
@@ -55,19 +54,38 @@ An interactive HTML/CSS/JS sandbox with editable source panels and live preview:
 
 ### Props
 
-| Prop           | Type                       | Default  | Description                                   |
-| -------------- | -------------------------- | -------- | --------------------------------------------- |
-| `code`         | `{ html?, css?, script? }` | —        | Source code for each panel                    |
-| `width`        | `string` or `number`       | `'100%'` | Sandbox width (number = px)                   |
-| `height`       | `string` or `number`       | `'100%'` | Sandbox height (number = px)                  |
-| `theme`        | `Theme`                    | —        | Container colors and fonts                    |
-| `editorTheme`  | `EditorTheme`              | —        | Editor syntax highlighting colors             |
-| `previewOnly`  | `boolean`                  | `false`  | Hide the editor, show only the preview        |
-| `classes`      | `string`                   | `''`     | Additional CSS classes on the container       |
-| `resizable`    | `boolean`                  | `true`   | Show a drag handle between editor and preview |
-| `initialSplit` | `number`                   | `50`     | Initial editor size in % (clamped to min/max) |
-| `minSplit`     | `number`                   | `20`     | Minimum editor size in %                      |
-| `maxSplit`     | `number`                   | `80`     | Maximum editor size in %                      |
+| Prop      | Type                          | Default | Description                                       |
+| --------- | ----------------------------- | ------- | ------------------------------------------------- |
+| `code`    | `{ html?, css?, script? }`    | —       | Source code for each panel                        |
+| `sandbox` | `SandboxConfig`               | `{}`    | Container sizing and split-handle config (below)  |
+| `editor`  | `EditorConfig`                | `{}`    | Editor pane config (below)                        |
+| `preview` | `{ enable?, name?, errors? }` | `{}`    | Preview pane config (`build` is supplied for you) |
+| `theme`   | `Theme`                       | —       | Container colors and fonts                        |
+
+#### `sandbox` (`SandboxConfig`)
+
+| Field       | Type                     | Default  | Description                                                         |
+| ----------- | ------------------------ | -------- | ------------------------------------------------------------------- |
+| `width`     | `string` or `number`     | `'100%'` | Sandbox width (number = px)                                         |
+| `height`    | `string` or `number`     | `'100%'` | Sandbox height (number = px)                                        |
+| `class`     | `ClassValue`             | —        | Additional CSS classes on the container                             |
+| `resizable` | `SplitConfig` or `false` | `{}`     | `{ initial?, min?, max? }` in %, or `false` to hide the drag handle |
+
+#### `editor` (`EditorConfig`)
+
+| Field    | Type          | Default       | Description                       |
+| -------- | ------------- | ------------- | --------------------------------- |
+| `enable` | `boolean`     | `true`        | Show the editor pane              |
+| `name`   | `string`      | `'Web files'` | Tab bar label                     |
+| `theme`  | `EditorTheme` | —             | Editor syntax highlighting colors |
+
+#### `preview`
+
+| Field    | Type       | Default         | Description                           |
+| -------- | ---------- | --------------- | ------------------------------------- |
+| `enable` | `boolean`  | `true`          | Show the preview pane                 |
+| `name`   | `string`   | `'Web preview'` | iframe `title`                        |
+| `errors` | `string[]` | —               | Extra messages shown over the preview |
 
 ## SvelteSandbox
 
@@ -79,7 +97,7 @@ A multi-file Svelte playground with dynamic file tabs and live preview:
 	import { files } from '$lib/examples';
 </script>
 
-<SvelteSandbox width={800} height={400} {files} />
+<SvelteSandbox sandbox={{ width: 800, height: 400 }} {files} />
 ```
 
 ```ts
@@ -134,20 +152,16 @@ export const files = {
 
 ### Props
 
-| Prop           | Type                     | Default        | Description                                   |
-| -------------- | ------------------------ | -------------- | --------------------------------------------- |
-| `files`        | `Record<string, string>` | —              | Map of filename → source code                 |
-| `entry`        | `string`                 | `'App.svelte'` | Entry file to mount                           |
-| `width`        | `string` or `number`     | `'100%'`       | Sandbox width (number = px)                   |
-| `height`       | `string` or `number`     | `'100%'`       | Sandbox height (number = px)                  |
-| `theme`        | `Theme`                  | —              | Container colors and fonts                    |
-| `editorTheme`  | `EditorTheme`            | —              | Editor syntax highlighting colors             |
-| `previewOnly`  | `boolean`                | `false`        | Hide the editor, show only the preview        |
-| `classes`      | `string`                 | `''`           | Additional CSS classes on the container       |
-| `resizable`    | `boolean`                | `true`         | Show a drag handle between editor and preview |
-| `initialSplit` | `number`                 | `50`           | Initial editor size in % (clamped to min/max) |
-| `minSplit`     | `number`                 | `20`           | Minimum editor size in %                      |
-| `maxSplit`     | `number`                 | `80`           | Maximum editor size in %                      |
+| Prop      | Type                     | Default        | Description                                     |
+| --------- | ------------------------ | -------------- | ----------------------------------------------- |
+| `files`   | `Record<string, string>` | —              | Map of filename → source code                   |
+| `entry`   | `string`                 | `'App.svelte'` | Entry file to mount                             |
+| `sandbox` | `SandboxConfig`          | `{}`           | Container sizing and split-handle config        |
+| `editor`  | `EditorConfig`           | `{}`           | Editor pane config                              |
+| `preview` | `{ enable?, name? }`     | `{}`           | Preview pane config (`build`/`errors` supplied) |
+| `theme`   | `Theme`                  | —              | Container colors and fonts                      |
+
+> The `sandbox`, `editor`, `preview`, and `theme` objects have the same shape as in [WebSandbox](#props); only the `editor.name` default (`'Svelte files'`) and `preview.name` default (`'Svelte preview'`) differ. `preview.errors` isn't accepted here because compile errors are surfaced automatically.
 
 ## CodeEditor
 
@@ -179,7 +193,7 @@ The underlying CodeMirror 6 editor is also exported if you want to use it standa
 | `fontFamily`  | `'Atkinson Hyperlegible', sans-serif` | Container font family                  |
 | `fontSize`    | `1rem`                                | Container font size                    |
 
-### Editor (`editorTheme`)
+### Editor (`editor.theme`)
 
 | Prop         | Default            | Description                                    |
 | ------------ | ------------------ | ---------------------------------------------- |
@@ -204,10 +218,12 @@ The underlying CodeMirror 6 editor is also exported if you want to use it standa
 		accent: '#38bdf8',
 		radius: '0.75rem'
 	}}
-	editorTheme={{
-		accent: '#38bdf8',
-		function: '#f472b6',
-		comment: '#64748b'
+	editor={{
+		theme: {
+			accent: '#38bdf8',
+			function: '#f472b6',
+			comment: '#64748b'
+		}
 	}}
 />
 ```
@@ -219,7 +235,7 @@ The underlying CodeMirror 6 editor is also exported if you want to use it standa
 - **Svelte compilation** — When using `SvelteSandbox`, components are compiled client-side inside the iframe with support for multi-file imports.
 - **Dedent** — Template literals preserve their leading whitespace. The built-in `dedent` utility strips it so you can write clean, indented code blocks without affecting the output.
 - **Reactive** — Edits in any panel update the preview in real time. A reload button forces a fresh iframe render when needed.
-- **Resizable** — Drag the divider between editor and preview to resize (works side-by-side and stacked). Keyboard accessible via arrow keys, `Home`/`End`. Disable with `resizable={false}`.
+- **Resizable** — Drag the divider between editor and preview to resize (works side-by-side and stacked). On by default. Keyboard accessible via arrow keys, `Home`/`End`. Configure sizes with `sandbox={{ resizable: { initial, min, max } }}` or disable with `sandbox={{ resizable: false }}`.
 - **CodeMirror 6** — The editor uses CodeMirror 6 with a Poimandres-inspired dark theme, lazy-loaded to keep initial bundle size small.
 
 ## Development

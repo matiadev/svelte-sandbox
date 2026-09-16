@@ -16,6 +16,12 @@ export interface SandboxFile {
 	content: string;
 }
 
+export interface EditorConfig {
+	enable?: boolean;
+	name?: string;
+	theme?: EditorTheme;
+}
+
 export interface Theme {
 	bg?: string;
 	border?: string;
@@ -43,7 +49,6 @@ export interface EditorTheme {
 	fontFamily?: string;
 }
 
-/** Internal container config; becomes the public props shape in the next step. */
 export interface SplitConfig {
 	initial?: number;
 	min?: number;
@@ -57,12 +62,6 @@ export interface SandboxConfig {
 	resizable?: SplitConfig | false;
 }
 
-export interface EditorConfig {
-	enable?: boolean;
-	name?: string;
-	theme?: EditorTheme;
-}
-
 export interface PreviewConfig {
 	enable?: boolean;
 	name?: string;
@@ -71,15 +70,8 @@ export interface PreviewConfig {
 }
 
 export interface SharedProps {
-	width?: string | number;
-	height?: string | number;
+	sandbox?: SandboxConfig;
+	editor?: EditorConfig;
+	preview?: Omit<PreviewConfig, 'build'>;
 	theme?: Theme;
-	editorTheme?: EditorTheme;
-	previewOnly?: boolean;
-	classes?: ClassValue;
-	previewTitle?: string;
-	resizable?: boolean;
-	initialSplit?: number;
-	minSplit?: number;
-	maxSplit?: number;
 }

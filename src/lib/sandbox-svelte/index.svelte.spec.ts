@@ -17,11 +17,18 @@ describe('SvelteSandbox.svelte', () => {
 		await expect.element(page.getByRole('tab', { name: 'util.js' })).toBeInTheDocument();
 	});
 
-	it('hides the editor in previewOnly mode', async () => {
-		render(SvelteSandbox, { files, previewOnly: true });
+	it('hides the editor when disabled', async () => {
+		render(SvelteSandbox, { files, editor: { enable: false } });
 
 		await expect.element(page.getByTitle('Svelte preview')).toBeInTheDocument();
 		await expect.element(page.getByRole('tab', { name: 'App.svelte' })).not.toBeInTheDocument();
+	});
+
+	it('hides the preview when disabled', async () => {
+		render(SvelteSandbox, { files, preview: { enable: false } });
+
+		await expect.element(page.getByTitle('Svelte preview')).not.toBeInTheDocument();
+		await expect.element(page.getByRole('tab', { name: 'App.svelte' })).toBeInTheDocument();
 	});
 
 	describe('resizable panels', () => {
@@ -32,29 +39,58 @@ describe('SvelteSandbox.svelte', () => {
 		});
 
 		it('hides the resize handle when resizable is false', async () => {
-			await render(SvelteSandbox, { files, resizable: false });
+			await render(SvelteSandbox, { files, sandbox: { resizable: false } });
 
 			await expect.element(page.getByRole('slider')).not.toBeInTheDocument();
 		});
 
-		it('hides the resize handle in previewOnly mode', async () => {
-			await render(SvelteSandbox, { files, previewOnly: true });
+		it('hides the resize handle when only the editor is hidden', async () => {
+			await render(SvelteSandbox, { files, editor: { enable: false } });
 
 			await expect.element(page.getByRole('slider')).not.toBeInTheDocument();
 		});
 
-		it('respects initialSplit and clamps it to min/max', async () => {
-			const { container } = await render(SvelteSandbox, { files, initialSplit: 30 });
+		it('hides the resize handle when only the preview is hidden', async () => {
+			await render(SvelteSandbox, { files, preview: { enable: false } });
+
+			await expect.element(page.getByRole('slider')).not.toBeInTheDocument();
+		});
+
+		it('respects initial and clamps it to min/max', async () => {
+			const { container } = await render(SvelteSandbox, {
+				files,
+				sandbox: { resizable: { initial: 30 } }
+			});
 			expect(container.querySelector('[role="slider"]')?.getAttribute('aria-valuenow')).toBe('30');
 
-			const clamped = await render(SvelteSandbox, { files, initialSplit: 5 });
+			const clamped = await render(SvelteSandbox, {
+				files,
+				sandbox: { resizable: { initial: 5 } }
+			});
 			expect(
 				clamped.container.querySelector('[role="slider"]')?.getAttribute('aria-valuenow')
 			).toBe('20');
 		});
 
+		it('re-reads min/max from props after mount', async () => {
+			const { container, rerender } = await render(SvelteSandbox, {
+				files,
+				sandbox: { resizable: { min: 20 } }
+			});
+			const handle = container.querySelector('[role="slider"]') as HTMLElement;
+			expect(handle.getAttribute('aria-valuemin')).toBe('20');
+
+			await rerender({ sandbox: { resizable: { min: 40 } } });
+			handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+			await tick();
+			expect(handle.getAttribute('aria-valuenow')).toBe('40');
+		});
+
 		it('moves the split with arrow keys', async () => {
-			const { container } = await render(SvelteSandbox, { files, initialSplit: 50 });
+			const { container } = await render(SvelteSandbox, {
+				files,
+				sandbox: { resizable: { initial: 50 } }
+			});
 			const handle = container.querySelector('[role="slider"]') as HTMLElement;
 
 			handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
@@ -67,7 +103,10 @@ describe('SvelteSandbox.svelte', () => {
 		});
 
 		it('does not move the split on click without dragging', async () => {
-			const { container } = await render(SvelteSandbox, { files, initialSplit: 50 });
+			const { container } = await render(SvelteSandbox, {
+				files,
+				sandbox: { resizable: { initial: 50 } }
+			});
 			const handle = container.querySelector('[role="slider"]') as HTMLElement;
 
 			handle.dispatchEvent(
