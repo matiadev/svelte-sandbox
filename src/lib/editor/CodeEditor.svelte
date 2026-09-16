@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { EditorTheme } from '../types.js';
+	import type { EditorTheme } from '../types.ts';
 
 	export const DEFAULT_EDITOR_THEME: Required<EditorTheme> = {
 		accent: '#5de4c7',
@@ -13,12 +13,35 @@
 		fontSize: '14px',
 		fontFamily: 'JetBrains Mono'
 	};
+
+	async function loadCodeMirror() {
+		const modules = await Promise.all([
+			import('@codemirror/commands'),
+			import('@codemirror/view'),
+			import('@codemirror/state'),
+			import('@codemirror/language'),
+			import('@lezer/highlight'),
+			import('@codemirror/lang-html'),
+			import('@codemirror/lang-css'),
+			import('@codemirror/lang-javascript')
+		]);
+
+		// ts cant infer the types through `Object.assign`
+		type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
+			k: infer I
+		) => void
+			? I
+			: never;
+		type MergeModules<T extends readonly unknown[]> = UnionToIntersection<T[number]>;
+		return Object.assign({}, ...modules) as MergeModules<typeof modules>;
+	}
+
+	type CodeMirror = Awaited<ReturnType<typeof loadCodeMirror>>;
 </script>
 
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
-	import type { Language } from './languageMapper.js';
+	import type { Language } from './languageMapper.ts';
 
 	interface Props {
 		value?: string;
@@ -28,37 +51,30 @@
 
 	let { value = $bindable(''), language = 'html', theme }: Props = $props();
 
-	const editor: Attachment<HTMLDivElement> = (container) => {
-		let cancelled = false;
-		let view: { destroy: () => void } | undefined;
-
-		(async () => {
-			const [
-				{ history, defaultKeymap, historyKeymap },
-				{ keymap, EditorView, lineNumbers, highlightSpecialChars, drawSelection },
-				{ EditorState },
-				{ HighlightStyle, syntaxHighlighting, defaultHighlightStyle },
-				{ tags },
-				{ html },
-				{ css },
-				{ javascript }
-			] = await Promise.all([
-				import('@codemirror/commands'),
-				import('@codemirror/view'),
-				import('@codemirror/state'),
-				import('@codemirror/language'),
-				import('@lezer/highlight'),
-				import('@codemirror/lang-html'),
-				import('@codemirror/lang-css'),
-				import('@codemirror/lang-javascript')
-			]);
-
-			if (cancelled) return;
-
+	type Editor = (cm: CodeMirror) => Attachment<HTMLDivElement>;
+	const editor: Editor =
+		({
+			history,
+			defaultKeymap,
+			historyKeymap,
+			keymap,
+			EditorView,
+			lineNumbers,
+			highlightSpecialChars,
+			drawSelection,
+			EditorState,
+			HighlightStyle,
+			syntaxHighlighting,
+			defaultHighlightStyle,
+			tags,
+			html,
+			css,
+			javascript
+		}) =>
+		(container) => {
 			const resolved = { ...DEFAULT_EDITOR_THEME, ...theme };
 
-			const extensions = { css, javascript, html };
-			const lang = extensions[language]();
+			const lang = { css, javascript, html }[language]();
 
 			const minimalSetup = [
 				highlightSpecialChars(),
@@ -122,8 +138,8 @@
 				{ dark: true }
 			);
 
-			view = new EditorView({
-				doc: untrack(() => value),
+			const view = new EditorView({
+				doc: value,
 				extensions: [
 					minimalSetup,
 					lineNumbers(),
@@ -137,19 +153,19 @@
 				],
 				parent: container
 			});
-		})();
 
-		return () => {
-			cancelled = true;
-			view?.destroy();
+			return () => view.destroy();
 		};
-	};
 </script>
 
-<div class="editor" {@attach editor}></div>
+{#await loadCodeMirror()}
+	<div data-editor></div>
+{:then cm}
+	<div data-editor {@attach editor(cm)}></div>
+{/await}
 
 <style>
-	.editor {
+	[data-editor] {
 		flex: 1;
 		min-height: 0;
 		overflow: hidden;

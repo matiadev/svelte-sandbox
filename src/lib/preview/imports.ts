@@ -1,14 +1,18 @@
 import { parse as parseSvelte } from 'svelte/compiler';
 import { init, parse as parseImports } from 'es-module-lexer';
 
-let lexerReady = false;
-const lexerReadyPromise: Promise<boolean> = init().then(
-	() => (lexerReady = true),
-	() => false
-);
+/** The bare-import collector resolved by `ensureLexerReady()`; safe to call once init settles. */
 
-export function ensureLexerReady(): Promise<boolean> {
-	return lexerReadyPromise;
+export type Collector = {
+	bareImports: typeof collectBareImports;
+	scriptImports: typeof collectScriptImports;
+};
+
+export function ensureLexerReady() {
+	return init().then(() => ({
+		bareImports: collectBareImports,
+		scriptImports: collectScriptImports
+	}));
 }
 
 function isBare(spec: string): boolean {
@@ -20,7 +24,6 @@ function isSvelteSpec(spec: string): boolean {
 }
 
 function specsFromJs(source: string): string[] {
-	if (!lexerReady) return [];
 	try {
 		const [imports] = parseImports(source);
 		const out: string[] = [];

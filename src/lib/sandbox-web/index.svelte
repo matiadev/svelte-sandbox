@@ -1,14 +1,10 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import CodeEditor from '../editor/CodeEditor.svelte';
-	import { dedentCode } from '../utils/dedent.js';
-	import { collectScriptImports, ensureLexerReady } from '../preview/imports.js';
+	import { dedent } from '../utils/dedent.js';
+	import { type Collector } from '../preview/imports.js';
 	import Sandbox from '../container/Sandbox.svelte';
-	import Tabs from '../editor/Tabs.svelte';
-	import { renderDoc } from '../preview/renderCode.js';
-	import previewHtml from '../preview/template.html?raw';
-	import { language } from '../editor/languageMapper.js';
-	import type { Code, SharedProps } from '../types.js';
+	import type { Slots } from '../preview/renderCode.js';
+	import type { Code, SandboxConfig, SandboxFile, SharedProps } from '../types.js';
 
 	interface Props extends SharedProps {
 		code?: Code;
@@ -29,28 +25,25 @@
 		maxSplit = 80
 	}: Props = $props();
 
-	let code = $state(dedentCode(untrack(() => initial)));
+	let code: SandboxFile[] = $state(
+		untrack(() => [
+			{ name: 'html', label: 'HTML', language: 'html', content: dedent(initial?.html ?? '') },
+			{ name: 'css', label: 'CSS', language: 'css', content: dedent(initial?.css ?? '') },
+			{
+				name: 'script',
+				label: 'JS',
+				language: 'javascript',
+				content: dedent(initial?.script ?? '')
+			}
+		])
+	);
 
-	const panes = [
-		{ id: 'html', label: 'HTML' },
-		{ id: 'css', label: 'CSS' },
-		{ id: 'script', label: 'JS' }
-	] as const;
+	function content(name: string): string {
+		return code.find((file) => file.name === name)?.content ?? '';
+	}
 
-	type PaneId = (typeof panes)[number]['id'];
-
-	const tabs = $derived(panes.filter((t) => code[t.id] !== ''));
-
-	let activeTab: PaneId = $state(untrack(() => panes.find((t) => code[t.id] !== '')?.id ?? 'html'));
-
-	$effect(() => {
-		if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
-			activeTab = tabs[0].id;
-		}
-	});
-
-	function buildSrcdoc(lexerReady: boolean) {
-		const bareImports = lexerReady ? collectScriptImports(code.script ?? '') : [];
+	function buildSlots(collector: Collector): Slots {
+		const bareImports = collector.scriptImports(content('script'));
 
 		let importmapJSON;
 
@@ -62,77 +55,26 @@
 			importmapJSON = JSON.stringify({ imports }, null, 2);
 		}
 
-		return renderDoc(previewHtml, {
+		return {
 			IMPORTMAP: importmapJSON ? `<script type="importmap">${importmapJSON}<\/script>` : '',
-			USER_CSS: `<style>${code.css ?? ''}</style>`,
-			APP: `<div class="app">${code.html ?? ''}</div>`,
-			MODULE: `<script type="module">${code.script ?? ''}<\/script>`
-		});
+			USER_CSS: `<style>${content('css')}</style>`,
+			APP: `<div class="app">${content('html')}</div>`,
+			MODULE: `<script type="module">${content('script')}<\/script>`
+		};
 	}
+
+	const sandbox: SandboxConfig = $derived({
+		width,
+		height,
+		class: classes,
+		resizable: resizable ? { initial: initialSplit, min: minSplit, max: maxSplit } : false
+	});
 </script>
 
 <Sandbox
-	{width}
-	{height}
-	{classes}
 	{theme}
-	{previewOnly}
-	{resizable}
-	initial={initialSplit}
-	min={minSplit}
-	max={maxSplit}
->
-	{#snippet editor()}
-		{#if tabs.length === 0}
-			<p class="no-files">No code to edit.</p>
-		{:else}
-			<Tabs {tabs} bind:active={activeTab} label="Web files" idPrefix="web" />
-
-			{#key activeTab}
-				<div
-					role="tabpanel"
-					id="web-panel-{activeTab}"
-					aria-labelledby="web-tab-{activeTab}"
-					tabindex="0"
-				>
-					<CodeEditor
-						bind:value={code[activeTab]}
-						language={language[activeTab]}
-						theme={editorTheme}
-					/>
-				</div>
-			{/key}
-		{/if}
-	{/snippet}
-
-	{#snippet preview(reloadKey)}
-		{#await ensureLexerReady()}
-			<p class="preview-loading">Loading preview…</p>
-		{:then lexerReady}
-			{@const srcdoc = buildSrcdoc(lexerReady)}
-			{#key reloadKey}
-				<iframe {srcdoc} title={previewTitle} sandbox="allow-scripts"></iframe>
-			{/key}
-		{:catch}
-			<p class="preview-error" role="alert">Could not load preview.</p>
-		{/await}
-	{/snippet}
-</Sandbox>
-
-<style>
-	[role='tabpanel'] {
-		flex: 1;
-		min-height: 0;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-	}
-
-	.no-files,
-	.preview-loading,
-	.preview-error {
-		padding: var(--space-md);
-		font-size: 0.9rem;
-		color: var(--text-muted);
-	}
-</style>
+	{sandbox}
+	preview={{ name: previewTitle, build: buildSlots }}
+	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Web files' }}
+	bind:code
+/>
