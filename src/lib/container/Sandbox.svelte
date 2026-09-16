@@ -5,7 +5,7 @@
 	import type { Snippet } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import type { ClassValue } from 'svelte/elements';
-	import type { Theme } from './types.js';
+	import type { Theme } from '../types.js';
 
 	interface Props {
 		width?: string | number;

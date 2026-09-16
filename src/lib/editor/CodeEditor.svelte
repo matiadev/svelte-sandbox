@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { EditorTheme } from './types.js';
+	import type { EditorTheme } from '../types.js';
 
 	export const DEFAULT_EDITOR_THEME: Required<EditorTheme> = {
 		accent: '#5de4c7',

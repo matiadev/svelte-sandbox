@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { VERSION } from 'svelte/compiler';
-	import CodeEditor from './CodeEditor.svelte';
-	import { compileFiles } from './compile.js';
-	import { dedent } from './dedent.js';
-	import { collectBareImports, ensureLexerReady } from './imports.js';
-	import Sandbox from './Sandbox.svelte';
-	import Tabs from './Tabs.svelte';
-	import { renderDoc } from './preview-doc.js';
-	import previewHtml from './preview.html?raw';
-	import previewRuntime from './preview-runtime.js?raw';
-	import { language } from './languageMapper.js';
-	import type { SharedProps } from './types.js';
+	import CodeEditor from '../editor/CodeEditor.svelte';
+	import { compileFiles } from './compileFiles.js';
+	import { dedent } from '../utils/dedent.js';
+	import { collectBareImports, ensureLexerReady } from '../preview/imports.js';
+	import Sandbox from '../container/Sandbox.svelte';
+	import Tabs from '../editor/Tabs.svelte';
+	import { renderDoc } from '../preview/renderCode.js';
+	import previewHtml from '../preview/template.html?raw';
+	import previewRuntime from '../preview/runtime.js?raw';
+	import { language } from '../editor/languageMapper.js';
+	import type { SharedProps } from '../types.js';
 
 	interface Props extends SharedProps {
 		entry?: string;

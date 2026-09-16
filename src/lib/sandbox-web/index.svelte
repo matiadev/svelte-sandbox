@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import CodeEditor from './CodeEditor.svelte';
-	import { dedentCode } from './dedent.js';
-	import { collectScriptImports, ensureLexerReady } from './imports.js';
-	import Sandbox from './Sandbox.svelte';
-	import Tabs from './Tabs.svelte';
-	import { renderDoc } from './preview-doc.js';
-	import previewHtml from './preview.html?raw';
-	import { language } from './languageMapper.js';
-	import type { Code, SharedProps } from './types.js';
+	import CodeEditor from '../editor/CodeEditor.svelte';
+	import { dedentCode } from '../utils/dedent.js';
+	import { collectScriptImports, ensureLexerReady } from '../preview/imports.js';
+	import Sandbox from '../container/Sandbox.svelte';
+	import Tabs from '../editor/Tabs.svelte';
+	import { renderDoc } from '../preview/renderCode.js';
+	import previewHtml from '../preview/template.html?raw';
+	import { language } from '../editor/languageMapper.js';
+	import type { Code, SharedProps } from '../types.js';
 
 	interface Props extends SharedProps {
 		code?: Code;

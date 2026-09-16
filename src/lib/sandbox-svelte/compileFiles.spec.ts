@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compileFiles } from './compile.js';
+import { compileFiles } from './compileFiles.js';
 
 describe('compileFiles', () => {
 	it('compiles a valid .svelte file to client JS', () => {

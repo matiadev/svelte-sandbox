@@ -12,5 +12,5 @@
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext"
 	},
-	"exclude": ["src/lib/preview-runtime.js"]
+	"exclude": ["src/lib/preview/runtime.js"]
 }
