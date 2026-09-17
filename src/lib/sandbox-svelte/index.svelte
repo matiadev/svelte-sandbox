@@ -85,4 +85,5 @@
 	preview={{ name: previewTitle, buildPreview, errors }}
 	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Svelte files' }}
 	bind:code
+	idPrefix="svelte"
 />

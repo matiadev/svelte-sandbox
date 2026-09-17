@@ -1,18 +1,19 @@
 import { parse as parseSvelte } from 'svelte/compiler';
 import { init, parse as parseImports } from 'es-module-lexer';
 
-/** The bare-import collector resolved by `ensureLexerReady()`; safe to call once init settles. */
-
 export type ImportCollector = {
 	bareImports: typeof collectBareImports;
 	scriptImports: typeof collectScriptImports;
 };
 
-export function ensureLexerReady() {
-	return init().then(() => ({
+let collectorPromise: Promise<ImportCollector> | undefined;
+
+export function ensureLexerReady(): Promise<ImportCollector> {
+	collectorPromise ??= init().then(() => ({
 		bareImports: collectBareImports,
 		scriptImports: collectScriptImports
 	}));
+	return collectorPromise;
 }
 
 function isBare(spec: string): boolean {
@@ -23,7 +24,7 @@ function isSvelteSpec(spec: string): boolean {
 	return spec === 'svelte' || spec.startsWith('svelte/');
 }
 
-function specsFromJs(source: string): string[] {
+function extractImportSpecifiers(source: string): string[] {
 	try {
 		const [imports] = parseImports(source);
 		const out: string[] = [];
@@ -78,9 +79,9 @@ export function collectBareImports(files: Record<string, string>): string[] {
 	const specs: string[] = [];
 	for (const [name, source] of Object.entries(files)) {
 		if (name.endsWith('.svelte')) {
-			for (const chunk of svelteScriptChunks(source)) specs.push(...specsFromJs(chunk));
+			for (const chunk of svelteScriptChunks(source)) specs.push(...extractImportSpecifiers(chunk));
 		} else {
-			specs.push(...specsFromJs(source));
+			specs.push(...extractImportSpecifiers(source));
 		}
 	}
 	return [...new Set(specs)].filter((s) => isBare(s) && !isSvelteSpec(s));
@@ -88,5 +89,5 @@ export function collectBareImports(files: Record<string, string>): string[] {
 
 /** Bare imports from one plain script. Keeps svelte specs, WebSandbox maps those via esm.sh too. */
 export function collectScriptImports(source: string): string[] {
-	return [...new Set(specsFromJs(source ?? ''))].filter(isBare);
+	return [...new Set(extractImportSpecifiers(source ?? ''))].filter(isBare);
 }

@@ -14,14 +14,21 @@
 		code?: SandboxFile[];
 		preview: PreviewConfig;
 		theme?: Theme;
+		idPrefix?: string;
 	}
 
-	const { sandbox = {}, editor = {}, code = $bindable(), preview, theme }: Props = $props();
+	const {
+		sandbox = {},
+		editor = {},
+		code = $bindable(),
+		preview,
+		theme,
+		idPrefix = 'sandbox'
+	}: Props = $props();
 
 	const { width = '100%', height = '100%', classes = '', resizable = {} } = $derived(sandbox);
 	const splitConfig = $derived(resizable ? resizable : {});
 	const editorShown = $derived(editor.enable ?? true);
-	const previewShown = $derived(preview.enable ?? true);
 
 	const splitter = new Splitter({
 		initial: untrack(() => splitConfig.initial),
@@ -29,7 +36,7 @@
 		max: () => splitConfig.max
 	});
 
-	const visibleFiles = $derived((code ?? []).filter((file) => file.content !== ''));
+	const visibleFiles = $derived(code ?? []);
 	const activeFile = $derived(visibleFiles.find((file) => file.name === activeTab));
 
 	let activeTab = $state('');
@@ -50,9 +57,8 @@
 	<div
 		class={[
 			'sandbox',
-			resizable && editorShown && previewShown && 'has-divider',
-			!editorShown && previewShown && 'preview-only',
-			editorShown && !previewShown && 'editor-only'
+			resizable && editorShown && 'has-divider',
+			!editorShown && 'preview-only'
 		]}
 		data-dragging={splitter.dragging ? 'true' : undefined}
 		style:--bg={theme?.bg}
@@ -77,13 +83,13 @@
 						id: file.name,
 						label: file.label ?? file.name
 					}))}
-					<Tabs {tabs} bind:active={activeTab} label={editor.name ?? 'Files'} idPrefix="sandbox" />
+					<Tabs {tabs} bind:active={activeTab} label={editor.name ?? 'Files'} {idPrefix} />
 
 					{#key activeTab}
 						<div
 							role="tabpanel"
-							id="sandbox-panel-{activeTab}"
-							aria-labelledby="sandbox-tab-{activeTab}"
+							id="{idPrefix}-panel-{activeTab}"
+							aria-labelledby="{idPrefix}-tab-{activeTab}"
 							tabindex="0"
 						>
 							{#if activeFile}
@@ -98,16 +104,14 @@
 				{/if}
 			</div>
 		{/if}
-		{#if resizable && editorShown && previewShown}
+		{#if resizable && editorShown}
 			<Divider {splitter} />
 		{/if}
 
-		{#if previewShown}
-			<div class="preview">
-				<Preview {...preview} />
-				<Errors {...preview} />
-			</div>
-		{/if}
+		<div class="preview">
+			<Preview {...preview} />
+			<Errors {...preview} />
+		</div>
 	</div>
 </div>
 
@@ -185,16 +189,6 @@
 		}
 
 		&.has-divider .sidebar {
-			border-bottom: none;
-
-			@container (width > 700px) {
-				border-right: none;
-			}
-		}
-
-		&.editor-only .sidebar {
-			width: 100%;
-			height: 100%;
 			border-bottom: none;
 
 			@container (width > 700px) {

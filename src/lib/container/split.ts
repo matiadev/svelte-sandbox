@@ -18,7 +18,7 @@ export function splitFromDragDelta(
 	startY: number,
 	clientX: number,
 	clientY: number,
-	rect: { left: number; top: number; width: number; height: number },
+	rect: { width: number; height: number },
 	stacked: boolean,
 	min: number,
 	max: number

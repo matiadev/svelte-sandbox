@@ -75,4 +75,5 @@
 	preview={{ name: previewTitle, buildPreview }}
 	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Web files' }}
 	bind:code
+	idPrefix="web"
 />

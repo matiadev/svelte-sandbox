@@ -2,7 +2,7 @@
 	const container = /** @type {HTMLDivElement} */ (document.getElementById('app'));
 	let error;
 	try {
-		const dataEl = /** @type {HTMLDivElement} */ (document.getElementById('sandbox-data'));
+		const dataEl = /** @type {HTMLScriptElement} */ (document.getElementById('sandbox-data'));
 		const data = JSON.parse(dataEl.textContent ?? '{}');
 		const { files: compiled, entry } = data;
 

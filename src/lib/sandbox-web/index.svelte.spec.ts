@@ -10,12 +10,12 @@ const code = {
 };
 
 describe('WebSandbox.svelte', () => {
-	it('renders a tab per non-empty pane', async () => {
+	it('renders a tab per pane, even when empty', async () => {
 		render(WebSandbox, { code });
 
 		await expect.element(page.getByRole('tab', { name: 'HTML' })).toBeInTheDocument();
 		await expect.element(page.getByRole('tab', { name: 'CSS' })).toBeInTheDocument();
-		await expect.element(page.getByRole('tab', { name: 'JS' })).not.toBeInTheDocument();
+		await expect.element(page.getByRole('tab', { name: 'JS' })).toBeInTheDocument();
 	});
 
 	it('renders the preview iframe', async () => {

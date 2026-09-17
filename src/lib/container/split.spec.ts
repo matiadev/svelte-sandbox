@@ -9,7 +9,7 @@ describe('split helpers', () => {
 	});
 
 	it('moves the split by the pointer delta, not the absolute position', () => {
-		const rect = { left: 0, top: 0, width: 1000, height: 400 };
+		const rect = { width: 1000, height: 400 };
 		// no movement means no change, wherever the grab happened
 		expect(splitFromDragDelta(50, 503, 0, 503, 0, rect, false, 20, 80)).toBe(50);
 		// dragging 40px right on a 1000px container adds 4
@@ -18,13 +18,13 @@ describe('split helpers', () => {
 	});
 
 	it('clamps the dragged split to min/max', () => {
-		const rect = { left: 0, top: 0, width: 1000, height: 400 };
+		const rect = { width: 1000, height: 400 };
 		expect(splitFromDragDelta(50, 500, 0, -100, 0, rect, false, 20, 80)).toBe(20);
 		expect(splitFromDragDelta(50, 500, 0, 2000, 0, rect, false, 20, 80)).toBe(80);
 	});
 
 	it('uses the vertical delta when stacked', () => {
-		const rect = { left: 0, top: 0, width: 400, height: 800 };
+		const rect = { width: 400, height: 800 };
 		expect(splitFromDragDelta(50, 0, 203, 0, 203, rect, true, 20, 80)).toBe(50);
 		expect(splitFromDragDelta(50, 0, 200, 0, 280, rect, true, 20, 80)).toBe(60);
 		expect(splitFromDragDelta(50, 0, 200, 0, -2000, rect, true, 20, 80)).toBe(20);

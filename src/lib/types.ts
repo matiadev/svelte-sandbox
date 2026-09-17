@@ -43,7 +43,6 @@ export interface EditorTheme {
 	fontFamily?: string;
 }
 
-/** Internal container config; becomes the public props shape in the next step. */
 export interface SplitConfig {
 	initial?: number;
 	min?: number;
@@ -64,7 +63,6 @@ export interface EditorConfig {
 }
 
 export interface PreviewConfig {
-	enable?: boolean;
 	name?: string;
 	buildPreview: (collector: ImportCollector) => PreviewHTML;
 	errors?: string[];
