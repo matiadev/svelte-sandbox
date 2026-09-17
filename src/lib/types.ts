@@ -1,7 +1,7 @@
 import type { ClassValue } from 'svelte/elements';
-import type { Language } from './editor/languageMapper.ts';
-import type { Slots } from './preview/renderCode.ts';
-import type { Collector } from './preview/imports.ts';
+import type { Language } from './editor/languageMapper.js';
+import type { PreviewHTML } from './preview/renderCode.js';
+import type { ImportCollector } from './preview/imports.js';
 
 export interface Code {
 	html?: string;
@@ -53,7 +53,7 @@ export interface SplitConfig {
 export interface SandboxConfig {
 	width?: string | number;
 	height?: string | number;
-	class?: ClassValue;
+	classes?: ClassValue;
 	resizable?: SplitConfig | false;
 }
 
@@ -66,7 +66,7 @@ export interface EditorConfig {
 export interface PreviewConfig {
 	enable?: boolean;
 	name?: string;
-	build: (collector: Collector) => Slots;
+	buildPreview: (collector: ImportCollector) => PreviewHTML;
 	errors?: string[];
 }
 

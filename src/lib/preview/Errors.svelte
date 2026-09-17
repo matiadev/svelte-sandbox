@@ -7,7 +7,7 @@
 </script>
 
 {#if errors.length > 0}
-	<div role="status">
+	<div class="compile-errors" role="status">
 		{#each errors as error (error)}
 			<pre>{error}</pre>
 		{/each}
@@ -15,7 +15,7 @@
 {/if}
 
 <style>
-	div[role='status'] {
+	.compile-errors {
 		position: absolute;
 		right: var(--space-sm);
 		bottom: var(--space-sm);

@@ -38,7 +38,7 @@
 	}
 </script>
 
-<div role="tablist" aria-label={label}>
+<div class="tabs" role="tablist" aria-label={label}>
 	{#each tabs as tab (tab.id)}
 		{@const selected = active === tab.id}
 		<button
@@ -57,7 +57,7 @@
 </div>
 
 <style>
-	[role='tablist'] {
+	.tabs {
 		border-bottom: var(--border-w) solid var(--border);
 
 		button {

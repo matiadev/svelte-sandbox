@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { VERSION } from 'svelte/compiler';
+	import Sandbox from '../container/Sandbox.svelte';
 	import { compileFiles } from './compileFiles.js';
 	import { dedent } from '../utils/dedent.js';
-	import type { Collector } from '../preview/imports.js';
-	import Sandbox from '../container/Sandbox.svelte';
-	import type { Slots } from '../preview/renderCode.js';
-	import previewRuntime from '../preview/runtime.js?raw';
 	import { language } from '../editor/languageMapper.js';
+	import { toSandboxConfig } from '../container/sandboxConfig.js';
+	import previewRuntime from '../preview/runtime.js?raw';
+	import type { ImportCollector } from '../preview/imports.js';
+	import type { PreviewHTML } from '../preview/renderCode.js';
 	import type { SandboxConfig, SandboxFile, SharedProps } from '../types.js';
 
 	interface Props extends SharedProps {
@@ -18,17 +19,17 @@
 	const {
 		entry = 'App.svelte',
 		files: initial,
-		width = '100%',
-		height = '100%',
+		width,
+		height,
 		theme,
 		editorTheme,
 		previewOnly = false,
-		classes = '',
+		classes,
 		previewTitle = 'Svelte preview',
-		resizable = true,
-		initialSplit = 50,
-		minSplit = 20,
-		maxSplit = 80
+		resizable,
+		initialSplit,
+		minSplit,
+		maxSplit
 	}: Props = $props();
 
 	let code: SandboxFile[] = $state(
@@ -47,8 +48,8 @@
 		Object.entries(compiled.errors).map(([file, message]) => `${file}: ${message}`)
 	);
 
-	function buildSlots(collect: Collector): Slots {
-		const bareImports = collect.bareImports(files);
+	function buildPreview(collector: ImportCollector): PreviewHTML {
+		const bareImports = collector.bareImports(files);
 		const importMap = {
 			imports: Object.assign(
 				{
@@ -73,18 +74,15 @@
 		};
 	}
 
-	const sandbox: SandboxConfig = $derived({
-		width,
-		height,
-		class: classes,
-		resizable: resizable ? { initial: initialSplit, min: minSplit, max: maxSplit } : false
-	});
+	const sandbox: SandboxConfig = $derived(
+		toSandboxConfig({ width, height, classes, resizable, initialSplit, minSplit, maxSplit })
+	);
 </script>
 
 <Sandbox
 	{theme}
 	{sandbox}
-	preview={{ name: previewTitle, build: buildSlots, errors }}
+	preview={{ name: previewTitle, buildPreview, errors }}
 	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Svelte files' }}
 	bind:code
 />

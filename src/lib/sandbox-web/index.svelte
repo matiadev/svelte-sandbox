@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { dedent } from '../utils/dedent.js';
-	import { type Collector } from '../preview/imports.js';
 	import Sandbox from '../container/Sandbox.svelte';
-	import type { Slots } from '../preview/renderCode.js';
+	import { dedent } from '../utils/dedent.js';
+	import { toSandboxConfig } from '../container/sandboxConfig.js';
+	import type { ImportCollector } from '../preview/imports.js';
+	import type { PreviewHTML } from '../preview/renderCode.js';
 	import type { Code, SandboxConfig, SandboxFile, SharedProps } from '../types.js';
 
 	interface Props extends SharedProps {
@@ -12,17 +13,17 @@
 
 	const {
 		code: initial,
-		width = '100%',
-		height = '100%',
+		width,
+		height,
 		theme,
 		editorTheme,
 		previewOnly = false,
-		classes = '',
+		classes,
 		previewTitle = 'Web preview',
-		resizable = true,
-		initialSplit = 50,
-		minSplit = 20,
-		maxSplit = 80
+		resizable,
+		initialSplit,
+		minSplit,
+		maxSplit
 	}: Props = $props();
 
 	let code: SandboxFile[] = $state(
@@ -42,7 +43,7 @@
 		return code.find((file) => file.name === name)?.content ?? '';
 	}
 
-	function buildSlots(collector: Collector): Slots {
+	function buildPreview(collector: ImportCollector): PreviewHTML {
 		const bareImports = collector.scriptImports(content('script'));
 
 		let importmapJSON;
@@ -63,18 +64,15 @@
 		};
 	}
 
-	const sandbox: SandboxConfig = $derived({
-		width,
-		height,
-		class: classes,
-		resizable: resizable ? { initial: initialSplit, min: minSplit, max: maxSplit } : false
-	});
+	const sandbox: SandboxConfig = $derived(
+		toSandboxConfig({ width, height, classes, resizable, initialSplit, minSplit, maxSplit })
+	);
 </script>
 
 <Sandbox
 	{theme}
 	{sandbox}
-	preview={{ name: previewTitle, build: buildSlots }}
+	preview={{ name: previewTitle, buildPreview }}
 	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Web files' }}
 	bind:code
 />

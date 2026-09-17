@@ -1,5 +1,4 @@
 import { on } from 'svelte/events';
-import type { Attachment } from 'svelte/attachments';
 import {
 	SPLIT_BREAKPOINT,
 	SPLIT_DEFAULT,
@@ -9,6 +8,7 @@ import {
 	nextSplitFromKey,
 	splitFromDragDelta
 } from './split.js';
+import type { Attachment } from 'svelte/attachments';
 import type { HTMLAttributes } from 'svelte/elements';
 
 interface Drag {
@@ -22,7 +22,7 @@ interface Drag {
 	height: number;
 }
 
-export interface SplitStateOptions {
+interface SplitterOptions {
 	initial?: number;
 	min?: () => number | undefined;
 	max?: () => number | undefined;
@@ -39,7 +39,7 @@ export class Splitter {
 	#max: () => number = () => SPLIT_MAX;
 	#drag: Drag | null = null;
 
-	constructor(options: SplitStateOptions = {}) {
+	constructor(options: SplitterOptions = {}) {
 		this.#breakpoint = options.breakpoint ?? SPLIT_BREAKPOINT;
 		this.#min = () => options.min?.() ?? SPLIT_MIN;
 		this.#max = () => options.max?.() ?? SPLIT_MAX;

@@ -1,23 +1,25 @@
 <script lang="ts">
-	import { ensureLexerReady, type Collector } from './imports.js';
-	import { renderCode, type Slots } from './renderCode.js';
+	import { ensureLexerReady } from './imports.js';
+	import { renderCode } from './renderCode.js';
 	import previewHtml from './template.html?raw';
+	import type { ImportCollector } from './imports.js';
+	import type { PreviewHTML } from './renderCode.js';
 
 	interface Props {
-		build: (collector: Collector) => Slots;
+		buildPreview: (collector: ImportCollector) => PreviewHTML;
 		name?: string;
 	}
 
-	const { build: buildSlots, name = 'Preview' }: Props = $props();
+	const { buildPreview, name = 'Preview' }: Props = $props();
 </script>
 
 {#await ensureLexerReady()}
-	<p>Loading preview…</p>
+	<p class="preview-loading">Loading preview…</p>
 {:then collector}
-	{@const srcdoc = renderCode(previewHtml, buildSlots(collector))}
+	{@const srcdoc = renderCode(previewHtml, buildPreview(collector))}
 	{let reloadKey = $state(false)}
 	{#key reloadKey}
-		<iframe {srcdoc} title={name} sandbox="allow-scripts"></iframe>
+		<iframe class="preview-frame" {srcdoc} title={name} sandbox="allow-scripts"></iframe>
 	{/key}
 	<button
 		type="button"
@@ -43,18 +45,19 @@
 		</svg>
 	</button>
 {:catch}
-	<p role="alert">Could not load preview.</p>
+	<p class="preview-error" role="alert">Could not load preview.</p>
 {/await}
 
 <style>
-	iframe {
+	.preview-frame {
 		width: 100%;
 		height: 100%;
 		display: block;
 		border: none;
 	}
 
-	p {
+	.preview-loading,
+	.preview-error {
 		padding: var(--space-md);
 		font-size: 0.9rem;
 		color: var(--text-muted);

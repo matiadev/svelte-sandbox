@@ -1,10 +1,10 @@
 <script lang="ts">
-	import Divider from './Divider.svelte';
-	import Preview from '../preview/Preview.svelte';
-	import Errors from '../preview/Errors.svelte';
-	import Tabs from '../editor/Tabs.svelte';
-	import CodeEditor from '../editor/CodeEditor.svelte';
 	import { untrack } from 'svelte';
+	import CodeEditor from '../editor/CodeEditor.svelte';
+	import Divider from './Divider.svelte';
+	import Errors from '../preview/Errors.svelte';
+	import Preview from '../preview/Preview.svelte';
+	import Tabs from '../editor/Tabs.svelte';
 	import { Splitter } from './split.svelte.js';
 	import type { EditorConfig, PreviewConfig, SandboxConfig, SandboxFile, Theme } from '../types.js';
 
@@ -18,7 +18,7 @@
 
 	const { sandbox = {}, editor = {}, code = $bindable(), preview, theme }: Props = $props();
 
-	const { width = '100%', height = '100%', class: clazz, resizable = {} } = $derived(sandbox);
+	const { width = '100%', height = '100%', classes = '', resizable = {} } = $derived(sandbox);
 	const splitConfig = $derived(resizable ? resizable : {});
 	const editorShown = $derived(editor.enable ?? true);
 	const previewShown = $derived(preview.enable ?? true);
@@ -42,8 +42,7 @@
 </script>
 
 <div
-	data-container
-	class={clazz}
+	class={['sandbox-container', classes]}
 	{@attach splitter.attachContainer}
 	style:width={typeof width === 'number' ? `${width}px` : width}
 	style:height={typeof height === 'number' ? `${height}px` : height}
@@ -72,7 +71,7 @@
 		{#if editorShown}
 			<div class="sidebar">
 				{#if visibleFiles.length === 0}
-					<p class="note">No code to edit.</p>
+					<p class="no-files">No code to edit.</p>
 				{:else}
 					{@const tabs = visibleFiles.map((file) => ({
 						id: file.name,
@@ -113,7 +112,7 @@
 </div>
 
 <style>
-	[data-container] {
+	.sandbox-container {
 		container-type: inline-size;
 	}
 
@@ -162,7 +161,7 @@
 			-webkit-user-select: none;
 		}
 
-		&[data-dragging] .preview :global(iframe) {
+		&[data-dragging] .preview :global(.preview-frame) {
 			pointer-events: none;
 		}
 
@@ -234,7 +233,7 @@
 		overflow: hidden;
 	}
 
-	p.note {
+	p.no-files {
 		padding: var(--space-md);
 		font-size: 0.9rem;
 		color: var(--text-muted);

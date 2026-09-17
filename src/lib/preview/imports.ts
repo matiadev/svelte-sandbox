@@ -3,7 +3,7 @@ import { init, parse as parseImports } from 'es-module-lexer';
 
 /** The bare-import collector resolved by `ensureLexerReady()`; safe to call once init settles. */
 
-export type Collector = {
+export type ImportCollector = {
 	bareImports: typeof collectBareImports;
 	scriptImports: typeof collectScriptImports;
 };
