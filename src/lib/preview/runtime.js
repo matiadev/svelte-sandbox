@@ -1,11 +1,13 @@
 (async () => {
-	const container = document.getElementById('app');
+	const container = /** @type {HTMLDivElement} */ (document.getElementById('app'));
 	let error;
 	try {
-		const data = JSON.parse(document.getElementById('sandbox-data').textContent);
+		const dataEl = /** @type {HTMLScriptElement} */ (document.getElementById('sandbox-data'));
+		const data = JSON.parse(dataEl.textContent ?? '{}');
 		const { files: compiled, entry } = data;
 
 		error = data.error;
+		/** @type {Record<string, string>} */
 		const dir = {};
 
 		for (const [name, js] of Object.entries(compiled)) {
@@ -28,7 +30,7 @@
 		const { mount } = await import('svelte');
 		mount(Component, { target: container });
 	} catch (err) {
-		container.textContent = 'Error: ' + (err.message ?? err);
+		container.textContent = 'Error: ' + (err instanceof Error ? err.message : String(err));
 		if (error) container.style.color = error;
 		container.style.padding = '1rem';
 		container.style.fontFamily = 'monospace';

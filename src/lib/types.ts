@@ -1,9 +1,19 @@
 import type { ClassValue } from 'svelte/elements';
+import type { Language } from './editor/languageMapper.js';
+import type { PreviewHTML } from './preview/renderCode.js';
+import type { ImportCollector } from './preview/imports.js';
 
 export interface Code {
 	html?: string;
 	css?: string;
 	script?: string;
+}
+
+export interface SandboxFile {
+	name: string;
+	label?: string;
+	language: Language;
+	content: string;
 }
 
 export interface Theme {
@@ -31,6 +41,31 @@ export interface EditorTheme {
 	gutter?: string;
 	fontSize?: string;
 	fontFamily?: string;
+}
+
+export interface SplitConfig {
+	initial?: number;
+	min?: number;
+	max?: number;
+}
+
+export interface SandboxConfig {
+	width?: string | number;
+	height?: string | number;
+	classes?: ClassValue;
+	resizable?: SplitConfig | false;
+}
+
+export interface EditorConfig {
+	enable?: boolean;
+	name?: string;
+	theme?: EditorTheme;
+}
+
+export interface PreviewConfig {
+	name?: string;
+	buildPreview: (collector: ImportCollector) => PreviewHTML;
+	errors?: string[];
 }
 
 export interface SharedProps {

@@ -1,74 +1,66 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import SplitDivider from './SplitDivider.svelte';
-	import { SPLIT_BREAKPOINT, clampSplit } from './split.js';
-	import type { Snippet } from 'svelte';
-	import type { Attachment } from 'svelte/attachments';
-	import type { ClassValue } from 'svelte/elements';
-	import type { Theme } from './types.js';
+	import CodeEditor from '../editor/CodeEditor.svelte';
+	import Divider from './Divider.svelte';
+	import Errors from '../preview/Errors.svelte';
+	import Preview from '../preview/Preview.svelte';
+	import Tabs from '../editor/Tabs.svelte';
+	import { Splitter } from './split.svelte.js';
+	import type { EditorConfig, PreviewConfig, SandboxConfig, SandboxFile, Theme } from '../types.js';
 
 	interface Props {
-		width?: string | number;
-		height?: string | number;
-		classes?: ClassValue;
+		sandbox?: SandboxConfig;
+		editor?: EditorConfig;
+		code?: SandboxFile[];
+		preview: PreviewConfig;
 		theme?: Theme;
-		previewOnly?: boolean;
-		resizable?: boolean;
-		initial?: number;
-		min?: number;
-		max?: number;
-		editor?: Snippet;
-		preview: Snippet<[boolean]>;
+		idPrefix?: string;
 	}
 
 	const {
-		width = '100%',
-		height = '100%',
-		classes = '',
+		sandbox = {},
+		editor = {},
+		code = $bindable(),
+		preview,
 		theme,
-		previewOnly = false,
-		resizable = true,
-		initial = 50,
-		min = 20,
-		max = 80,
-		editor,
-		preview
+		idPrefix = 'sandbox'
 	}: Props = $props();
 
-	// uncontrolled split, intentionally reads props only once
-	let split = $state(
-		clampSplit(
-			untrack(() => initial),
-			untrack(() => min),
-			untrack(() => max)
-		)
-	);
+	const { width = '100%', height = '100%', classes = '', resizable = {} } = $derived(sandbox);
+	const splitConfig = $derived(resizable ? resizable : {});
+	const editorShown = $derived(editor.enable ?? true);
 
-	let stacked = $state(false);
-	let dragging = $state(false);
+	const splitter = new Splitter({
+		initial: untrack(() => splitConfig.initial),
+		min: () => splitConfig.min,
+		max: () => splitConfig.max
+	});
 
-	const observeStacked: Attachment<HTMLDivElement> = (node) => {
-		const update = () => {
-			stacked = node.clientWidth <= SPLIT_BREAKPOINT;
-		};
-		update();
-		const observer = new ResizeObserver(update);
-		observer.observe(node);
-		return () => observer.disconnect();
-	};
+	const visibleFiles = $derived(code ?? []);
+	const activeFile = $derived(visibleFiles.find((file) => file.name === activeTab));
+
+	let activeTab = $state('');
+
+	$effect(() => {
+		if (!visibleFiles.some((file) => file.name === activeTab)) {
+			activeTab = visibleFiles[0]?.name ?? '';
+		}
+	});
 </script>
 
 <div
 	class={['sandbox-container', classes]}
-	{@attach observeStacked}
+	{@attach splitter.attachContainer}
 	style:width={typeof width === 'number' ? `${width}px` : width}
 	style:height={typeof height === 'number' ? `${height}px` : height}
 >
 	<div
 		class={[
 			'sandbox',
-			{ 'preview-only': previewOnly, dragging, 'has-divider': resizable && !previewOnly }
+			resizable && editorShown && 'has-divider',
+			!editorShown && 'preview-only'
 		]}
+		data-dragging={splitter.dragging ? 'true' : undefined}
 		style:--bg={theme?.bg}
 		style:--border={theme?.border}
 		style:--accent={theme?.accent}
@@ -80,43 +72,45 @@
 		style:--border-w={theme?.borderW}
 		style:--font-family={theme?.fontFamily}
 		style:--font-size={theme?.fontSize}
-		style:--split="{split}%"
+		style:--split="{splitter.split}%"
 	>
-		{#if !previewOnly}
+		{#if editorShown}
 			<div class="sidebar">
-				{@render editor?.()}
+				{#if visibleFiles.length === 0}
+					<p class="no-files">No code to edit.</p>
+				{:else}
+					{@const tabs = visibleFiles.map((file) => ({
+						id: file.name,
+						label: file.label ?? file.name
+					}))}
+					<Tabs {tabs} bind:active={activeTab} label={editor.name ?? 'Files'} {idPrefix} />
+
+					{#key activeTab}
+						<div
+							role="tabpanel"
+							id="{idPrefix}-panel-{activeTab}"
+							aria-labelledby="{idPrefix}-tab-{activeTab}"
+							tabindex="0"
+						>
+							{#if activeFile}
+								<CodeEditor
+									bind:value={activeFile.content}
+									language={activeFile.language}
+									theme={editor.theme}
+								/>
+							{/if}
+						</div>
+					{/key}
+				{/if}
 			</div>
-			{#if resizable}
-				<SplitDivider bind:split bind:dragging {stacked} {min} {max} />
-			{/if}
+		{/if}
+		{#if resizable && editorShown}
+			<Divider {splitter} />
 		{/if}
 
 		<div class="preview">
-			{let reloadKey = $state(false)}
-			{@render preview(reloadKey)}
-			<button
-				type="button"
-				class="reload-button"
-				onclick={() => (reloadKey = !reloadKey)}
-				aria-label="Reload preview"
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					aria-hidden="true"
-					focusable="false"
-				>
-					<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-					<path d="M3 3v5h5" />
-				</svg>
-			</button>
+			<Preview {...preview} />
+			<Errors {...preview} />
 		</div>
 	</div>
 </div>
@@ -166,12 +160,12 @@
 			flex-direction: row;
 		}
 
-		&.dragging {
+		&[data-dragging] {
 			user-select: none;
 			-webkit-user-select: none;
 		}
 
-		&.dragging .preview :global(iframe) {
+		&[data-dragging] .preview :global(.preview-frame) {
 			pointer-events: none;
 		}
 
@@ -217,13 +211,6 @@
 				min-height: auto;
 			}
 
-			:global(iframe) {
-				width: 100%;
-				height: 100%;
-				display: block;
-				border: none;
-			}
-
 			.preview-only & {
 				width: 100%;
 				height: 100%;
@@ -232,26 +219,17 @@
 		}
 	}
 
-	.reload-button {
-		position: absolute;
-		top: var(--space-sm);
-		right: var(--space-sm);
-		padding: var(--space-xs);
+	[role='tabpanel'] {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	p.no-files {
+		padding: var(--space-md);
+		font-size: 0.9rem;
 		color: var(--text-muted);
-		background: var(--bg);
-		border: var(--border-w) solid var(--border);
-		border-radius: var(--radius);
-		cursor: pointer;
-		transition: color 0.1s;
-
-		&:hover {
-			color: var(--text);
-		}
-
-		svg {
-			width: var(--icon-size);
-			height: var(--icon-size);
-			display: block;
-		}
 	}
 </style>

@@ -2,7 +2,7 @@ import { tick } from 'svelte';
 import { page } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
-import SvelteSandbox from './SvelteSandbox.svelte';
+import SvelteSandbox from './index.svelte';
 
 const files = {
 	'App.svelte': '<h1>Hello</h1>',
@@ -15,6 +15,12 @@ describe('SvelteSandbox.svelte', () => {
 
 		await expect.element(page.getByRole('tab', { name: 'App.svelte' })).toBeInTheDocument();
 		await expect.element(page.getByRole('tab', { name: 'util.js' })).toBeInTheDocument();
+	});
+
+	it('renders a tab for empty files', async () => {
+		render(SvelteSandbox, { files: { ...files, 'empty.js': '' } });
+
+		await expect.element(page.getByRole('tab', { name: 'empty.js' })).toBeInTheDocument();
 	});
 
 	it('hides the editor in previewOnly mode', async () => {
@@ -51,6 +57,17 @@ describe('SvelteSandbox.svelte', () => {
 			expect(
 				clamped.container.querySelector('[role="slider"]')?.getAttribute('aria-valuenow')
 			).toBe('20');
+		});
+
+		it('re-reads min/max from props after mount', async () => {
+			const { container, rerender } = await render(SvelteSandbox, { files, minSplit: 20 });
+			const handle = container.querySelector('[role="slider"]') as HTMLElement;
+			expect(handle.getAttribute('aria-valuemin')).toBe('20');
+
+			await rerender({ minSplit: 40 });
+			handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+			await tick();
+			expect(handle.getAttribute('aria-valuenow')).toBe('40');
 		});
 
 		it('moves the split with arrow keys', async () => {

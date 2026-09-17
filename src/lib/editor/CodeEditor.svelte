@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { EditorTheme } from './types.js';
+	import type { EditorTheme } from '../types.js';
 
 	export const DEFAULT_EDITOR_THEME: Required<EditorTheme> = {
 		accent: '#5de4c7',
@@ -13,10 +13,35 @@
 		fontSize: '14px',
 		fontFamily: 'JetBrains Mono'
 	};
+
+	async function loadEditor() {
+		const [commands, view, state, language, highlight, htmlLang, cssLang, jsLang] =
+			await Promise.all([
+				import('@codemirror/commands'),
+				import('@codemirror/view'),
+				import('@codemirror/state'),
+				import('@codemirror/language'),
+				import('@lezer/highlight'),
+				import('@codemirror/lang-html'),
+				import('@codemirror/lang-css'),
+				import('@codemirror/lang-javascript')
+			]);
+		return {
+			...commands,
+			...view,
+			...state,
+			...language,
+			...highlight,
+			...htmlLang,
+			...cssLang,
+			...jsLang
+		};
+	}
+
+	type Editor = Awaited<ReturnType<typeof loadEditor>>;
 </script>
 
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import type { Language } from './languageMapper.js';
 
@@ -28,37 +53,29 @@
 
 	let { value = $bindable(''), language = 'html', theme }: Props = $props();
 
-	const editor: Attachment<HTMLDivElement> = (container) => {
-		let cancelled = false;
-		let view: { destroy: () => void } | undefined;
-
-		(async () => {
-			const [
-				{ history, defaultKeymap, historyKeymap },
-				{ keymap, EditorView, lineNumbers, highlightSpecialChars, drawSelection },
-				{ EditorState },
-				{ HighlightStyle, syntaxHighlighting, defaultHighlightStyle },
-				{ tags },
-				{ html },
-				{ css },
-				{ javascript }
-			] = await Promise.all([
-				import('@codemirror/commands'),
-				import('@codemirror/view'),
-				import('@codemirror/state'),
-				import('@codemirror/language'),
-				import('@lezer/highlight'),
-				import('@codemirror/lang-html'),
-				import('@codemirror/lang-css'),
-				import('@codemirror/lang-javascript')
-			]);
-
-			if (cancelled) return;
-
+	function createEditor(editor: Editor): Attachment<HTMLDivElement> {
+		const {
+			history,
+			defaultKeymap,
+			historyKeymap,
+			keymap,
+			EditorView,
+			lineNumbers,
+			highlightSpecialChars,
+			drawSelection,
+			EditorState,
+			HighlightStyle,
+			syntaxHighlighting,
+			defaultHighlightStyle,
+			tags,
+			html,
+			css,
+			javascript
+		} = editor;
+		return (container) => {
 			const resolved = { ...DEFAULT_EDITOR_THEME, ...theme };
 
-			const extensions = { css, javascript, html };
-			const lang = extensions[language]();
+			const lang = { css, javascript, html }[language]();
 
 			const minimalSetup = [
 				highlightSpecialChars(),
@@ -122,8 +139,8 @@
 				{ dark: true }
 			);
 
-			view = new EditorView({
-				doc: untrack(() => value),
+			const view = new EditorView({
+				doc: value,
 				extensions: [
 					minimalSetup,
 					lineNumbers(),
@@ -137,16 +154,17 @@
 				],
 				parent: container
 			});
-		})();
 
-		return () => {
-			cancelled = true;
-			view?.destroy();
+			return () => view.destroy();
 		};
-	};
+	}
 </script>
 
-<div class="editor" {@attach editor}></div>
+{#await loadEditor()}
+	<div class="editor"></div>
+{:then editor}
+	<div class="editor" {@attach createEditor(editor)}></div>
+{/await}
 
 <style>
 	.editor {
