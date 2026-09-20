@@ -1,5 +1,8 @@
 <script module lang="ts">
+	import type { Language } from './languageMapper.js';
 	import type { EditorTheme } from '../types.js';
+
+	type Editor = Awaited<ReturnType<typeof loadEditor>>;
 
 	export const DEFAULT_EDITOR_THEME: Required<EditorTheme> = {
 		accent: '#5de4c7',
@@ -38,12 +41,83 @@
 		};
 	}
 
-	type Editor = Awaited<ReturnType<typeof loadEditor>>;
+	let editorPromise: Promise<Editor> | undefined;
+
+	function getEditor(): Promise<Editor> {
+		editorPromise ??= loadEditor();
+		return editorPromise;
+	}
+
+	function languageExtension(editor: Editor, lang: Language) {
+		return { css: editor.css, javascript: editor.javascript, html: editor.html }[lang]();
+	}
+
+	function appearanceExtensions(editor: Editor, theme: EditorTheme | undefined) {
+		const resolved = { ...DEFAULT_EDITOR_THEME, ...theme };
+
+		const highlight = editor.HighlightStyle.define([
+			{ tag: editor.tags.keyword, color: resolved.accent },
+			{ tag: editor.tags.string, color: resolved.accent },
+			{ tag: editor.tags.number, color: resolved.accent },
+			{ tag: editor.tags.tagName, color: resolved.accent },
+			{ tag: editor.tags.function(editor.tags.variableName), color: resolved.function },
+			{ tag: editor.tags.className, color: resolved.function },
+			{ tag: editor.tags.variableName, color: resolved.variable },
+			{ tag: editor.tags.propertyName, color: resolved.variable },
+			{ tag: editor.tags.typeName, color: resolved.muted },
+			{ tag: editor.tags.punctuation, color: resolved.muted },
+			{ tag: editor.tags.operator, color: theme?.muted ?? '#91b4d5' },
+			{ tag: editor.tags.attributeName, color: theme?.muted ?? '#91b4d5' },
+			{ tag: editor.tags.comment, color: resolved.comment },
+			{ tag: editor.tags.bool, color: resolved.special },
+			{ tag: editor.tags.null, color: resolved.special }
+		]);
+
+		const themeExtension = editor.EditorView.theme(
+			{
+				'&': {
+					fontSize: resolved.fontSize,
+					color: resolved.text,
+					height: '100%'
+				},
+				'& .cm-scroller': {
+					fontFamily: resolved.fontFamily,
+					scrollbarWidth: 'thin'
+				},
+				'& .cm-scroller::-webkit-scrollbar': {
+					width: '8px',
+					height: '8px'
+				},
+				'.cm-gutters': {
+					background: 'transparent',
+					color: resolved.gutter,
+					border: 'none'
+				},
+				'.cm-activeLineGutter': {
+					background: 'transparent'
+				},
+				'& .cm-lineNumbers .cm-gutterElement': {
+					minWidth: '30px'
+				},
+				'.cm-activeLine': {
+					background: 'transparent'
+				},
+				'.cm-content': {
+					padding: '1rem 0rem'
+				}
+			},
+			{ dark: true }
+		);
+
+		return [editor.syntaxHighlighting(highlight), themeExtension];
+	}
 </script>
 
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
-	import type { Language } from './languageMapper.js';
+	import type { EditorView } from '@codemirror/view';
+	import type { Compartment } from '@codemirror/state';
 
 	interface Props {
 		value?: string;
@@ -53,118 +127,98 @@
 
 	let { value = $bindable(''), language = 'html', theme }: Props = $props();
 
-	function createEditor(editor: Editor): Attachment<HTMLDivElement> {
-		const {
-			history,
-			defaultKeymap,
-			historyKeymap,
-			keymap,
-			EditorView,
-			lineNumbers,
-			highlightSpecialChars,
-			drawSelection,
-			EditorState,
-			HighlightStyle,
-			syntaxHighlighting,
-			defaultHighlightStyle,
-			tags,
-			html,
-			css,
-			javascript
-		} = editor;
-		return (container) => {
-			const resolved = { ...DEFAULT_EDITOR_THEME, ...theme };
+	// load editor modules once so typing never reloads them
+	const modules = getEditor();
 
-			const lang = { css, javascript, html }[language]();
+	let view = $state<EditorView | undefined>(undefined);
+	let editor = $state<Editor | undefined>(undefined);
+	let languageCompartment = $state<Compartment | undefined>(undefined);
+	let appearanceCompartment = $state<Compartment | undefined>(undefined);
+
+	// attach once so the view survives rerenders
+	const attachEditor: Attachment<HTMLDivElement> = (container) => {
+		let cancelled = false;
+		let currentView: EditorView | undefined;
+
+		modules.then((mods) => {
+			if (cancelled) return;
+
+			const initialDoc = untrack(() => value);
+			const initialLanguage = untrack(() => language);
+			const initialTheme = untrack(() => theme);
+
+			const lang = new mods.Compartment();
+			const appearance = new mods.Compartment();
 
 			const minimalSetup = [
-				highlightSpecialChars(),
-				history(),
-				drawSelection(),
-				syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-				keymap.of([...defaultKeymap, ...historyKeymap])
+				mods.highlightSpecialChars(),
+				mods.history(),
+				mods.drawSelection(),
+				mods.syntaxHighlighting(mods.defaultHighlightStyle, { fallback: true }),
+				mods.keymap.of([...mods.defaultKeymap, ...mods.historyKeymap])
 			];
 
-			const poimandresHighlight = HighlightStyle.define([
-				{ tag: tags.keyword, color: resolved.accent },
-				{ tag: tags.string, color: resolved.accent },
-				{ tag: tags.number, color: resolved.accent },
-				{ tag: tags.tagName, color: resolved.accent },
-				{ tag: tags.function(tags.variableName), color: resolved.function },
-				{ tag: tags.className, color: resolved.function },
-				{ tag: tags.variableName, color: resolved.variable },
-				{ tag: tags.propertyName, color: resolved.variable },
-				{ tag: tags.typeName, color: resolved.muted },
-				{ tag: tags.punctuation, color: resolved.muted },
-				{ tag: tags.operator, color: theme?.muted ?? '#91b4d5' },
-				{ tag: tags.attributeName, color: theme?.muted ?? '#91b4d5' },
-				{ tag: tags.comment, color: resolved.comment },
-				{ tag: tags.bool, color: resolved.special },
-				{ tag: tags.null, color: resolved.special }
-			]);
-
-			const poimandresTheme = EditorView.theme(
-				{
-					'&': {
-						fontSize: resolved.fontSize,
-						color: resolved.text,
-						height: '100%'
-					},
-					'& .cm-scroller': {
-						fontFamily: resolved.fontFamily,
-						scrollbarWidth: 'thin'
-					},
-					'& .cm-scroller::-webkit-scrollbar': {
-						width: '8px',
-						height: '8px'
-					},
-					'.cm-gutters': {
-						background: 'transparent',
-						color: resolved.gutter,
-						border: 'none'
-					},
-					'.cm-activeLineGutter': {
-						background: 'transparent'
-					},
-					'& .cm-lineNumbers .cm-gutterElement': {
-						minWidth: '30px'
-					},
-					'.cm-activeLine': {
-						background: 'transparent'
-					},
-					'.cm-content': {
-						padding: '1rem 0rem'
-					}
-				},
-				{ dark: true }
-			);
-
-			const view = new EditorView({
-				doc: value,
+			currentView = new mods.EditorView({
+				doc: initialDoc,
 				extensions: [
 					minimalSetup,
-					lineNumbers(),
-					syntaxHighlighting(poimandresHighlight),
-					poimandresTheme,
-					lang,
-					EditorState.tabSize.of(2),
-					EditorView.updateListener.of((update) => {
+					mods.lineNumbers(),
+					lang.of(languageExtension(mods, initialLanguage)),
+					appearance.of(appearanceExtensions(mods, initialTheme)),
+					mods.EditorState.tabSize.of(2),
+					mods.EditorView.updateListener.of((update) => {
 						if (update.docChanged) value = update.state.doc.toString();
 					})
 				],
 				parent: container
 			});
 
-			return () => view.destroy();
+			editor = mods;
+			languageCompartment = lang;
+			appearanceCompartment = appearance;
+			view = currentView;
+		});
+
+		return () => {
+			cancelled = true;
+			currentView?.destroy();
+			currentView = undefined;
+			view = undefined;
+			editor = undefined;
+			languageCompartment = undefined;
+			appearanceCompartment = undefined;
 		};
-	}
+	};
+
+	// apply parent value changes to the view and skip edits that came from the view
+	$effect(() => {
+		const next = value;
+		untrack(() => {
+			if (!view) return;
+			const current = view.state.doc.toString();
+			if (next !== current) {
+				view.dispatch({ changes: { from: 0, to: current.length, insert: next } });
+			}
+		});
+	});
+
+	// switch language and theme without rebuilding the view
+	$effect(() => {
+		const nextLanguage = language;
+		const nextTheme = theme;
+		untrack(() => {
+			if (!view || !editor || !languageCompartment || !appearanceCompartment) return;
+			view.dispatch({
+				effects: [
+					languageCompartment.reconfigure(languageExtension(editor, nextLanguage)),
+					appearanceCompartment.reconfigure(appearanceExtensions(editor, nextTheme))
+				]
+			});
+		});
+	});
 </script>
 
-{#await loadEditor()}
-	<div class="editor"></div>
-{:then editor}
-	<div class="editor" {@attach createEditor(editor)}></div>
-{/await}
+<div class="editor" {@attach attachEditor}></div>
 
 <style>
 	.editor {
