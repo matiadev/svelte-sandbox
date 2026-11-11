@@ -95,6 +95,7 @@
 							{#if activeFile}
 								<CodeEditor
 									bind:value={activeFile.content}
+									extensions={editor.extensions}
 									language={activeFile.language}
 									theme={editor.theme}
 								/>

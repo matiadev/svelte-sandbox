@@ -17,6 +17,7 @@
 		height,
 		theme,
 		editorTheme,
+		editorExtensions,
 		previewOnly = false,
 		classes,
 		previewTitle = 'Web preview',
@@ -73,7 +74,7 @@
 	{theme}
 	{sandbox}
 	preview={{ name: previewTitle, buildPreview }}
-	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Web files' }}
+	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Web files', extensions: editorExtensions }}
 	bind:code
 	idPrefix="web"
 />

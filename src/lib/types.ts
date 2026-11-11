@@ -2,6 +2,7 @@ import type { ClassValue } from 'svelte/elements';
 import type { Language } from './editor/languageMapper.js';
 import type { PreviewHTML } from './preview/renderCode.js';
 import type { ImportCollector } from './preview/imports.js';
+import type { Extension } from '@codemirror/state';
 
 export interface Code {
 	html?: string;
@@ -59,6 +60,7 @@ export interface SandboxConfig {
 export interface EditorConfig {
 	enable?: boolean;
 	name?: string;
+	extensions?: Extension;
 	theme?: EditorTheme;
 }
 
@@ -73,6 +75,7 @@ export interface SharedProps {
 	height?: string | number;
 	theme?: Theme;
 	editorTheme?: EditorTheme;
+	editorExtensions?: Extension;
 	previewOnly?: boolean;
 	classes?: ClassValue;
 	previewTitle?: string;

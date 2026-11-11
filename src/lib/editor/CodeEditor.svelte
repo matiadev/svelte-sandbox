@@ -117,15 +117,16 @@
 	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import type { EditorView } from '@codemirror/view';
-	import type { Compartment } from '@codemirror/state';
+	import type { Compartment, Extension } from '@codemirror/state';
 
 	interface Props {
 		value?: string;
 		language?: Language;
+		extensions?: Extension;
 		theme?: EditorTheme;
 	}
 
-	let { value = $bindable(''), language = 'html', theme }: Props = $props();
+	let { value = $bindable(''), extensions, language = 'html', theme }: Props = $props();
 
 	// load editor modules once so typing never reloads them
 	const modules = getEditor();
@@ -168,7 +169,8 @@
 					mods.EditorState.tabSize.of(2),
 					mods.EditorView.updateListener.of((update) => {
 						if (update.docChanged) value = update.state.doc.toString();
-					})
+					}),
+					extensions ? extensions : []
 				],
 				parent: container
 			});
