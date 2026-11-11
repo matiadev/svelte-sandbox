@@ -23,6 +23,7 @@
 		height,
 		theme,
 		editorTheme,
+		editorExtensions,
 		previewOnly = false,
 		classes,
 		previewTitle = 'Svelte preview',
@@ -83,7 +84,7 @@
 	{theme}
 	{sandbox}
 	preview={{ name: previewTitle, buildPreview, errors }}
-	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Svelte files' }}
+	editor={{ enable: !previewOnly, theme: editorTheme, name: 'Svelte files', extensions: editorExtensions }}
 	bind:code
 	idPrefix="svelte"
 />
